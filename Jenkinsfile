@@ -183,6 +183,10 @@ pipeline {
                         exit 1
                     fi
 
+                    # Remove existing target directory if still present to avoid nesting
+                    rm -rf "$DEPLOY_PATH"
+
+                    # Move new directory into place
                     mv "$TEMP_DIR" "$DEPLOY_PATH"
 
                     if [ ! -f "$DEPLOY_PATH/index.html" ]; then
