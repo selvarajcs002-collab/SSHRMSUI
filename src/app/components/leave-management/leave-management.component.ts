@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { EmsApiService } from '../../services/ems-api.service';
 
 interface LeaveRequest {
@@ -64,12 +65,12 @@ interface EmployeeSelect {
 
           <div class="filter-options">
             <label class="inline-label">Status:</label>
-            <select [(ngModel)]="statusFilter" (change)="filterLeaves()" class="status-select">
-              <option value="All">All Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
+            <ng-select [(ngModel)]="statusFilter" (change)="filterLeaves()" class="status-select" [clearable]="false">
+              <ng-option value="All">All Statuses</ng-option>
+              <ng-option value="Pending">Pending</ng-option>
+              <ng-option value="Approved">Approved</ng-option>
+              <ng-option value="Rejected">Rejected</ng-option>
+            </ng-select>
           </div>
         </div>
 
@@ -171,19 +172,20 @@ interface EmployeeSelect {
               <!-- Select Employee -->
               <div class="form-group">
                 <label for="employeeId">Employee *</label>
-                <select 
+                <ng-select 
                   id="employeeId" 
                   name="employeeId" 
                   [(ngModel)]="applyModel.employeeId" 
                   required
                   #empSelect="ngModel"
                   [class.invalid]="empSelect.invalid && empSelect.touched"
+                  placeholder="Select an employee..."
+                  [clearable]="false"
                 >
-                  <option value="" disabled selected>Select an employee...</option>
-                  <option *ngFor="let emp of activeEmployees" [value]="emp.id">
+                  <ng-option *ngFor="let emp of activeEmployees" [value]="emp.id">
                     {{ emp.firstName }} {{ emp.lastName }} ({{ emp.employeeCode }})
-                  </option>
-                </select>
+                  </ng-option>
+                </ng-select>
                 <span class="error-text" *ngIf="empSelect.invalid && empSelect.touched">
                   Please select an employee.
                 </span>
@@ -192,17 +194,18 @@ interface EmployeeSelect {
               <!-- Leave Type -->
               <div class="form-group">
                 <label for="leaveType">Leave Type *</label>
-                <select 
+                <ng-select 
                   id="leaveType" 
                   name="leaveType" 
                   [(ngModel)]="applyModel.leaveType" 
                   required
+                  [clearable]="false"
                 >
-                  <option [value]="0">Sick Leave</option>
-                  <option [value]="1">Casual Leave</option>
-                  <option [value]="2">Earned Leave</option>
-                  <option [value]="3">Unpaid Leave</option>
-                </select>
+                  <ng-option [value]="0">Sick Leave</ng-option>
+                  <ng-option [value]="1">Casual Leave</ng-option>
+                  <ng-option [value]="2">Earned Leave</ng-option>
+                  <ng-option [value]="3">Unpaid Leave</ng-option>
+                </ng-select>
               </div>
 
               <!-- Dates Row -->

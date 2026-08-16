@@ -1,25 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { EmsApiService } from '../../services/ems-api.service';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx-js-style';
+import { EmployeeSalaryFullDetialsComponent } from './employee-salary-full-detials/employee-salary-full-detials.component';
 
 @Component({
   selector: 'app-payroll',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HttpClientModule, EmployeeSalaryFullDetialsComponent],
   template: `
     <div class="payroll-container animate-fade-in">
       
       <!-- Header -->
         <div class="section-title-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <div>
-            <h2>Payroll & Settlements</h2>
+            <h2 style="font-weight: 800; font-size: 1.5rem; color: #0f172a; margin: 0;">Payroll & Settlements</h2>
           </div>
           <div class="action-buttons-header" style="margin-left: auto;">
-            <button (click)="openExportModal()" class="btn btn-export-excel" style="background-color: #10b981; color: white; border: none; padding: 0.6rem 1.2rem; font-weight: 600; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3), 0 2px 4px -1px rgba(16, 185, 129, 0.2); transition: all 0.2s ease;">
-              <i class="fa-solid fa-file-excel" style="margin-right: 0.4rem;"></i> Export Paid Rolls
+            <button (click)="openExportModal()" class="btn btn-export-excel" style="background-color: #16a34a; color: white; border: none; padding: 0.6rem 1.25rem; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2); transition: all 0.2s ease; display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-download"></i> Export Payroll Data
             </button>
           </div>
         </div>
@@ -27,51 +29,51 @@ import * as XLSX from 'xlsx-js-style';
       <!-- Monthly Controls Removed -->
 
       <!-- Top Statistics Cards -->
-      <div class="dashboard-stats-grid">
-        <div class="stat-widget-card">
-          <div class="stat-icon-wrapper badge-blue">
+      <div class="dashboard-stats-grid premium-stats-grid">
+        <div class="stat-widget-card premium-stat-card">
+          <div class="icon-container-blue-light" style="width: 48px; height: 48px; font-size: 1.25rem; border-radius: 12px;">
             <i class="fa-solid fa-users"></i>
           </div>
-          <div class="stat-info">
-            <span>Total Employees</span>
-            <h3>{{ employees.length }}</h3>
-            <div class="stat-trend text-muted">Active Staff</div>
+          <div class="stat-info premium-stat-info">
+            <span class="stat-title">TOTAL EMPLOYEES</span>
+            <h3 class="stat-value">{{ employees.length }}</h3>
+            <div class="stat-subtext text-muted">Active Staff</div>
           </div>
         </div>
         
-        <div class="stat-widget-card">
-          <div class="stat-icon-wrapper badge-green">
-            <i class="fa-solid fa-money-bill-wave"></i>
+        <div class="stat-widget-card premium-stat-card">
+          <div class="icon-container-green-light" style="width: 48px; height: 48px; font-size: 1.25rem; border-radius: 12px;">
+            <i class="fa-solid fa-sack-dollar"></i>
           </div>
-          <div class="stat-info">
-            <span>Total Payroll</span>
-            <h3>INR {{ (summary?.totalNetPayable || 0) | number }}</h3>
-            <div class="stat-trend text-muted">Aggregate Gross</div>
+          <div class="stat-info premium-stat-info">
+            <span class="stat-title">TOTAL PAYROLL</span>
+            <h3 class="stat-value">INR {{ (summary?.totalNetPayable || 0) | number }}</h3>
+            <div class="stat-subtext text-muted">This Month Total</div>
           </div>
         </div>
 
-        <div class="stat-widget-card">
-          <div class="stat-icon-wrapper badge-purple">
-            <i class="fa-solid fa-circle-check"></i>
+        <div class="stat-widget-card premium-stat-card">
+          <div class="icon-container-purple-light" style="width: 48px; height: 48px; font-size: 1.25rem; border-radius: 12px;">
+            <i class="fa-solid fa-certificate"></i>
           </div>
-          <div class="stat-info">
-            <span>Paid Payouts</span>
-            <h3>{{ summary?.paidCount || 0 }}</h3>
-            <div class="stat-trend trend-up">
-              INR {{ (summary?.totalPaid || 0) | number }} Paid
+          <div class="stat-info premium-stat-info">
+            <span class="stat-title">PAID EMPLOYEES</span>
+            <h3 class="stat-value">{{ summary?.paidCount || 0 }}</h3>
+            <div class="stat-subtext text-success" style="font-weight: 600;">
+              {{ (employees.length ? ((summary?.paidCount || 0) / employees.length * 100) : 0) | number:'1.0-0' }}% of Employees
             </div>
           </div>
         </div>
 
-        <div class="stat-widget-card">
-          <div class="stat-icon-wrapper badge-orange">
+        <div class="stat-widget-card premium-stat-card">
+          <div class="icon-container-orange-light" style="width: 48px; height: 48px; font-size: 1.25rem; border-radius: 12px;">
             <i class="fa-solid fa-circle-exclamation"></i>
           </div>
-          <div class="stat-info">
-            <span>Unpaid Payouts</span>
-            <h3>{{ summary?.unpaidCount || 0 }}</h3>
-            <div class="stat-trend trend-down">
-              INR {{ (summary?.totalUnpaid || 0) | number }} Awaiting
+          <div class="stat-info premium-stat-info">
+            <span class="stat-title">PENDING EMPLOYEES</span>
+            <h3 class="stat-value">{{ summary?.unpaidCount || 0 }}</h3>
+            <div class="stat-subtext text-danger" style="font-weight: 600;">
+              {{ (employees.length ? ((summary?.unpaidCount || 0) / employees.length * 100) : 0) | number:'1.0-0' }}% Pending
             </div>
           </div>
         </div>
@@ -90,158 +92,90 @@ import * as XLSX from 'xlsx-js-style';
         </div>
 
         <div *ngIf="!isLoading && employees.length > 0" class="payroll-grid">
-          <div *ngFor="let emp of employees" class="glass-card employee-payroll-card animate-fade-in">
+          <div *ngFor="let emp of employees" class="glass-card employee-payroll-card animate-fade-in premium-card">
             <div class="card-payout-header">
-              <span class="badge" [class]="getPayoutStatusBadgeClass(emp.id)">
-                {{ getPayoutStatusLabel(emp.id) }}
+              <span class="status-badge" [class]="getPayoutStatusBadgeClass(emp.id)">
+                &bull; {{ getPayoutStatusLabel(emp.id) }}
               </span>
-              <code class="code-lbl-small">{{ emp.employeeCode }}</code>
+              <span class="emp-id-badge">{{ emp.employeeCode }}</span>
             </div>
 
             <div class="card-payout-body">
-              <div class="avatar-cell">
-                <div class="avatar-circle">
+              <div class="avatar-cell-premium">
+                <div class="avatar-circle-premium">
                   <img 
                     *ngIf="emp.profilePicture && emp.profilePicture !== 'undefined' && emp.profilePicture !== 'null'" 
                     [src]="emp.profilePicture" 
                     alt="Profile" 
-                    class="avatar-img"
+                    class="avatar-img-premium"
                   />
                   <span *ngIf="!emp.profilePicture || emp.profilePicture === 'undefined' || emp.profilePicture === 'null'">
                     {{ getInitials(emp.fullName) }}
                   </span>
                 </div>
-                <div class="emp-meta">
-                  <span class="emp-name">{{ emp.fullName }}</span>
-                  <span class="emp-dept">{{ emp.designation || 'N/A' }}</span>
+                <div class="emp-meta-premium">
+                  <span class="emp-name-premium">{{ emp.fullName }}</span>
+                  <span class="emp-dept-premium">{{ emp.designation || 'N/A' }}</span>
                 </div>
               </div>
 
-              <div class="payout-details-lines mt-3">
-                <div class="payout-line">
-                  <span class="lbl">Base Salary</span>
-                  <span class="val font-semibold">INR {{ emp.salaryPerMonth | number }}</span>
+              <div class="premium-divider"></div>
+
+              <div class="payout-details-premium mt-3">
+                <div class="payout-line-premium">
+                  <div class="lbl-premium">
+                     <div class="icon-container-outline"><i class="fa-solid fa-sack-dollar"></i></div>
+                     Per Day Salary
+                  </div>
+                  <span class="val-premium font-bold">INR {{ emp.perDaySalary | number }}</span>
                 </div>
-                <div class="payout-line" *ngIf="getPayrollRecord(emp.id) as record">
-                  <span class="lbl">Net Payable</span>
-                  <span class="val text-accent font-bold">INR {{ record.netPayable | number }}</span>
-                </div>
+              </div>
+              
+              <div class="attendance-summary-panel mt-4">
+                 <div class="summary-item-vertical">
+                    <div class="icon-container-green-light"><i class="fa-regular fa-calendar-check"></i></div>
+                    <span class="lbl">Present Days</span>
+                    <span class="val">{{ getPayrollRecord(emp.id)?.presentDays || 0 }}</span>
+                 </div>
+                 <div class="summary-item-vertical">
+                    <div class="icon-container-red-light"><i class="fa-solid fa-bullseye"></i></div>
+                    <span class="lbl">Absent Days</span>
+                    <span class="val">{{ getPayrollRecord(emp.id)?.absentDays || 0 }}</span>
+                 </div>
+                 <div class="summary-item-vertical">
+                    <div class="icon-container-blue-light"><i class="fa-solid fa-shield-halved"></i></div>
+                    <span class="lbl">Status</span>
+                    <span class="val">{{ getPayoutStatusLabel(emp.id) }}</span>
+                 </div>
               </div>
             </div>
 
-            <div class="card-payout-footer mt-3 pt-2">
-              <button (click)="openPayrollModal(emp)" class="btn btn-secondary btn-sm w-full btn-manage">
-                <i class="fa-solid fa-gears"></i> Manage Payout
+            <div class="card-payout-footer mt-4 pt-2">
+              <button (click)="openPayrollModal(emp)" class="btn-manage-payout-outline">
+                  <i class="fa-solid fa-wallet"></i> Manage Payout <i class="fa-solid fa-chevron-right" style="margin-left: auto;"></i>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Payroll Details Modal Dialog -->
-      <div *ngIf="showModal" class="modal-overlay">
-        <div class="modal-card modal-wide animate-fade-in" style="max-width: 550px;">
-          <div class="modal-header py-3 px-4 border-b">
-            <h3 style="font-weight: 700; color: #1e293b;">Payroll Details</h3>
-            <button (click)="closeModal()" class="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
-          </div>
-
-          <div class="modal-body p-4">
-            <!-- Employee Mini Summary -->
-            <div class="employee-mini-summary mb-3" style="display: flex; justify-content: space-between; align-items: center; background: none; border-bottom: none; padding-bottom: 0;">
-              <div class="avatar-cell" style="gap: 1rem;">
-                <div class="avatar-circle">
-                  <img 
-                    *ngIf="selectedEmployeeForModal.profilePicture && selectedEmployeeForModal.profilePicture !== 'undefined' && selectedEmployeeForModal.profilePicture !== 'null'" 
-                    [src]="selectedEmployeeForModal.profilePicture" 
-                    alt="Profile" 
-                    class="avatar-img"
-                  />
-                  <span *ngIf="!selectedEmployeeForModal.profilePicture || selectedEmployeeForModal.profilePicture === 'undefined' || selectedEmployeeForModal.profilePicture === 'null'">
-                    {{ getInitials(selectedEmployeeForModal.fullName) }}
-                  </span>
-                </div>
-                <div class="emp-meta">
-                  <span class="emp-name" style="font-size: 1.1rem;">{{ selectedEmployeeForModal.fullName }}</span>
-                  <span class="emp-dept" style="color: #64748b; font-size: 0.85rem;">
-                    {{ selectedEmployeeForModal.employeeCode }} • {{ selectedEmployeeForModal.designation || 'N/A' }}
-                  </span>
-                </div>
-              </div>
-              <div class="period-badge-lbl" style="text-align: right;">
-                <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Month</div>
-                <div style="color: #2563eb; font-weight: 700; font-size: 0.95rem;">{{ months[selectedMonth-1].name }} {{ selectedYear }}</div>
-              </div>
-            </div>
-
-            <!-- Particulars Calculation Table -->
-            <div class="particulars-container" style="margin-top: 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-              <table class="particulars-table" style="width: 100%; border-collapse: collapse;">
-                <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                  <tr>
-                    <th style="text-align: left; padding: 0.85rem 1rem; color: #475569; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Particulars</th>
-                    <th style="text-align: right; padding: 0.85rem 1rem; color: #475569; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Amount (₹)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 1rem; color: #334155; font-weight: 600; font-size: 0.9rem;">Per Month Salary</td>
-                    <td style="text-align: right; padding: 1rem; color: #334155; font-weight: 600;">{{ selectedEmployeeForModal.salaryPerMonth | number:'1.2-2' }}</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 1rem; color: #22c55e; font-weight: 600; font-size: 0.9rem;">Present Days <span style="margin-left: 1rem; color: #22c55e; background: #dcfce7; padding: 0.1rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">{{ modalData.presentDays }}</span></td>
-                    <td style="text-align: right; padding: 1rem; color: #22c55e; font-weight: 600;">{{ modalData.presentProportion | number:'1.2-2' }}</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 1rem; color: #ef4444; font-weight: 600; font-size: 0.9rem;">Absent Days <span style="margin-left: 1rem; color: #ef4444; background: #fee2e2; padding: 0.1rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">{{ modalData.absentDays }}</span></td>
-                    <td style="text-align: right; padding: 1rem; color: #ef4444; font-weight: 600;">-{{ modalData.absentDeduction | number:'1.2-2' }}</td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 1rem; color: #f59e0b; font-weight: 600; font-size: 0.9rem;">Incentive</td>
-                    <td style="text-align: right; padding: 1rem;">
-                      <input *ngIf="!modalData.isPaid" type="number" [(ngModel)]="modalData.incentives" (input)="recalculateModalNet()" class="modal-num-input" style="text-align: right; width: 100px; padding: 0.35rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: border-color 0.2s;" placeholder="0" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'" />
-                      <span *ngIf="modalData.isPaid" style="color: #f59e0b; font-weight: 600;">{{ modalData.incentives | number:'1.2-2' }}</span>
-                    </td>
-                  </tr>
-                  <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 1rem; color: #f59e0b; font-weight: 600; font-size: 0.9rem;">Advance Deduction</td>
-                    <td style="text-align: right; padding: 1rem;">
-                      <div style="display: flex; align-items: center; justify-content: flex-end;">
-                        <span *ngIf="!modalData.isPaid" style="margin-right: 6px; color: #64748b; font-weight: 700;">-</span>
-                        <input *ngIf="!modalData.isPaid" type="number" [(ngModel)]="modalData.advances" (input)="recalculateModalNet()" class="modal-num-input" style="text-align: right; width: 100px; padding: 0.35rem; font-weight: 600; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: border-color 0.2s;" placeholder="0" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#cbd5e1'" />
-                      </div>
-                      <span *ngIf="modalData.isPaid" style="color: #ef4444; font-weight: 600;">-{{ modalData.advances | number:'1.2-2' }}</span>
-                    </td>
-                  </tr>
-                  <tr style="background: #eff6ff;">
-                    <td style="padding: 1.25rem 1rem; color: #1d4ed8; font-weight: 800; font-size: 1.05rem;">Total Net Salary</td>
-                    <td style="text-align: right; padding: 1.25rem 1rem; color: #1d4ed8; font-weight: 800; font-size: 1.15rem;">₹ {{ modalData.netPayable | number:'1.2-2' }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="modal-footer py-3 px-4 border-t justify-between" style="display: flex; align-items: center; justify-content: space-between;">
-            <div class="left-actions">
-              <button *ngIf="modalData.isPaid" (click)="downloadPayslip()" class="btn btn-outline btn-sm" style="color: #3b82f6; border-color: #bfdbfe;"><i class="fa-solid fa-print"></i> Print</button>
-            </div>
-            <div class="right-actions" style="display: flex; gap: 0.5rem;">
-              <button *ngIf="!modalData.isPaid" (click)="savePayroll(false)" [disabled]="isSaving" class="btn btn-primary btn-sm" style="background: #3b82f6; border-color: #3b82f6; color: white;">
-                <i class="fa-solid fa-floppy-disk"></i> Draft
-              </button>
-              <button *ngIf="!modalData.isPaid" (click)="savePayroll(true)" [disabled]="isSaving" class="btn btn-success btn-sm" style="background: #22c55e; border-color: #22c55e; color: white;">
-                <i class="fa-solid fa-circle-check"></i> Completed
-              </button>
-              <button *ngIf="modalData.isPaid" class="btn btn-success btn-sm" style="background: #22c55e; border-color: #22c55e; color: white;" disabled>
-                <i class="fa-solid fa-circle-check"></i> Completed
-              </button>
-              <button (click)="closeModal()" class="btn btn-secondary btn-sm" style="background: white; border: 1px solid #cbd5e1; color: #475569;">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
+
+    <!-- Employee Salary Full Details Panel -->
+    <app-employee-salary-full-detials
+      *ngIf="showModal"
+      [employee]="selectedEmployeeForModal"
+      [modalData]="modalData"
+      [monthName]="months[selectedMonth-1].name"
+      [selectedYear]="selectedYear"
+      [isSaving]="isSaving"
+      (close)="closeModal()"
+      (recalculate)="recalculateModalNet()"
+      (saveDraft)="savePayroll(false)"
+      (markCompleted)="savePayroll(true)"
+      (updateCompleted)="savePayroll(true)"
+      (downloadPayslip)="downloadPayslip()">
+    </app-employee-salary-full-detials>
 
     <!-- Export Modal -->
     <div class="modal-overlay animate-fade-in" *ngIf="isExportModalOpen">
@@ -593,6 +527,610 @@ import * as XLSX from 'xlsx-js-style';
       object-fit: cover;
       border-radius: 50%;
     }
+
+    /* PREMIUM REDESIGN STYLES */
+    
+    .premium-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      padding: 1.5rem;
+    }
+    .premium-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .badge-pill {
+      border-radius: 9999px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .emp-id-badge {
+      background: #eff6ff;
+      color: #3b82f6;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+    }
+    .avatar-cell-premium {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .avatar-circle-premium {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #f3e8ff;
+      color: #7e22ce;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+    .avatar-circle-large {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #f3e8ff;
+      color: #7e22ce;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+    .avatar-img-premium {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+    .emp-meta-premium {
+      display: flex;
+      flex-direction: column;
+    }
+    .emp-name-premium {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #0f172a;
+    }
+    .emp-dept-premium {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.15rem;
+    }
+    .premium-divider {
+      height: 1px;
+      background: #e2e8f0;
+      width: 100%;
+      margin: 1.25rem 0;
+    }
+    .payout-details-premium {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .payout-line-premium {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .lbl-premium {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #475569;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .val-premium {
+      color: #0f172a;
+      font-size: 0.95rem;
+    }
+    
+    .icon-container-blue {
+      background: #eff6ff;
+      color: #3b82f6;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .icon-container-purple {
+      background: #faf5ff;
+      color: #a855f7;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .icon-container-green {
+      background: #f0fdf4;
+      color: #22c55e;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .icon-container-red {
+      background: #fef2f2;
+      color: #ef4444;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .icon-container-orange {
+      background: #fffbeb;
+      color: #f59e0b;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    .icon-container-danger-alt {
+      background: #fff1f2;
+      color: #f43f5e;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    
+    .attendance-summary-panel {
+      display: flex;
+      justify-content: space-between;
+      background: #f8fafc;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .summary-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .summary-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .summary-meta .lbl {
+      font-size: 0.65rem;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .summary-meta .val {
+      font-size: 0.85rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    
+    .btn-manage-payout {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .btn-manage-payout:hover {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    .premium-modal-overlay {
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+    }
+    .premium-modal-card {
+      width: 720px;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: none;
+    }
+    .premium-modal-header {
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+    .modal-title-icon {
+      background: #e0e7ff;
+      color: #4f46e5;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    .premium-mini-summary {
+      background: #ffffff;
+      border: none;
+      padding: 0;
+    }
+    .premium-particulars {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .premium-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .premium-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    .premium-table tr:last-child td {
+      border-bottom: none;
+    }
+    .part-lbl {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #334155;
+    }
+    .part-val {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .count-badge-green {
+      background: #dcfce7;
+      color: #16a34a;
+      padding: 0.1rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .count-badge-red {
+      background: #fee2e2;
+      color: #ef4444;
+      padding: 0.1rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .premium-num-input {
+      width: 120px;
+      padding: 0.6rem 0.75rem;
+      text-align: right;
+      border: 1px solid #94a3b8 !important;
+      background-color: #ffffff;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .premium-num-input:hover {
+      border-color: #64748b !important;
+    }
+    .premium-num-input:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      background-color: #f8fafc;
+    }
+    
+    .net-salary-container {
+      background: #eff6ff;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #bfdbfe;
+    }
+    .net-salary-lbl {
+      color: #1e40af;
+      font-weight: 800;
+      font-size: 1.1rem;
+    }
+    .net-salary-val {
+      color: #1e40af;
+      font-weight: 800;
+      font-size: 1.4rem;
+    }
+    
+    .premium-modal-footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+    .btn-premium-ghost {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #64748b;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-premium-ghost:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .btn-premium-secondary {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+      padding: 0.5rem 1.25rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-premium-secondary:hover:not(:disabled) {
+      background: #dbeafe;
+    }
+    .btn-premium-secondary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-premium-primary {
+      background: #16a34a;
+      border: 1px solid #16a34a;
+      color: #ffffff;
+      padding: 0.5rem 1.25rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);
+    }
+    .btn-premium-primary:hover:not(:disabled) {
+      background: #15803d;
+      border-color: #15803d;
+    }
+    .btn-premium-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn-premium-outline {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      padding: 0.5rem 1.25rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-premium-outline:hover {
+      background: #f8fafc;
+      color: #0f172a;
+      border-color: #94a3b8;
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      display: inline-block;
+    }
+    
+    .icon-container-outline {
+      border: 1px solid #e2e8f0;
+      color: #64748b;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+    
+    .icon-container-green-light {
+      color: #16a34a;
+      background: #dcfce7;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .icon-container-red-light {
+      color: #ef4444;
+      background: #fee2e2;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .icon-container-blue-light {
+      color: #3b82f6;
+      background: #eff6ff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .summary-item-vertical {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.15rem;
+    }
+    .summary-item-vertical .lbl {
+      font-size: 0.65rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .summary-item-vertical .val {
+      font-size: 0.85rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    
+    .btn-manage-payout-outline {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #bfdbfe;
+      background: #ffffff;
+      color: #2563eb;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-manage-payout-outline:hover {
+      background: #eff6ff;
+    }
+
+    .premium-particulars-no-border {
+      width: 100%;
+    }
+    
+    .btn-premium-outline-purple {
+      background: #ffffff;
+      border: 1px solid #c7d2fe;
+      color: #4f46e5;
+      padding: 0.5rem 1.25rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-premium-outline-purple:hover:not(:disabled) {
+      background: #eef2ff;
+    }
+    .btn-premium-outline-purple:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .premium-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .premium-stat-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .premium-stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .premium-stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-title {
+      font-size: 0.7rem;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 0.25rem 0;
+    }
+    .stat-subtext {
+      font-size: 0.8rem;
+    }
+    .icon-container-purple-light {
+      color: #9333ea;
+      background: #f3e8ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .icon-container-orange-light {
+      color: #ea580c;
+      background: #ffedd5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   `]
 })
 export class PayrollComponent implements OnInit {
@@ -631,10 +1169,16 @@ export class PayrollComponent implements OnInit {
     { val: 11, name: 'November' },
     { val: 12, name: 'December' }
   ];
+  
+  appSettings: any = null;
 
-  constructor(private apiService: EmsApiService) {}
+  constructor(private apiService: EmsApiService, private http: HttpClient) {}
 
   ngOnInit() {
+    this.http.get('/assets/appsettings.json').subscribe({
+      next: (data) => this.appSettings = data,
+      error: (err) => console.error('Could not load appsettings.json', err)
+    });
     this.checkIfLastWeek();
     this.loadEmployeesAndPayroll();
   }
@@ -727,44 +1271,45 @@ export class PayrollComponent implements OnInit {
     // Present, Absent and Total Days
     const presentDays = attSum ? attSum.presentCount : 30; // default to full month present
     const absentDays = attSum ? attSum.absentCount : 0;
-    const totalDays = presentDays + absentDays;
-    const daysForDiv = totalDays || 30;
-
-    // Proportions
-    const presentProportion = Math.round((emp.salaryPerMonth / daysForDiv) * presentDays);
-    const absentDeduction = Math.round((emp.salaryPerMonth / daysForDiv) * absentDays);
+    
+    // Base Salary
+    const baseSalary = emp.perDaySalary * presentDays;
+    
+    // We don't have an absent deduction from a fixed base anymore
+    const absentDeduction = 0;
 
     const record = this.getPayrollRecord(emp.id);
     let incentives = 0;
     let allowances = 0;
     let advances = 0;
+    let netPayable = baseSalary;
     let isPaid = false;
-    let payrollId = null;
     let paidDate = null;
+    let payslipUrl = null;
 
     if (record) {
-      incentives = record.incentives;
-      // allowances back-calculated: record stores (allowances - absentDeduction) in DB
-      allowances = record.allowances + absentDeduction;
-      advances = record.advancePayments;
-      isPaid = record.isPaid;
-      payrollId = record.id;
-      paidDate = record.paidDate;
+      incentives = record.incentives || 0;
+      allowances = record.allowances || 0;
+      advances = record.advancePayments || 0;
+      netPayable = baseSalary + incentives + allowances - advances;
+      isPaid = record.isPaid || false;
+      paidDate = record.paidDate || null;
+      payslipUrl = record.payslipFilePath || null;
     }
 
     this.modalData = {
       presentDays,
       absentDays,
-      totalDays,
-      presentProportion,
+      baseSalary,
       absentDeduction,
       incentives,
       allowances,
       advances,
       netPayable: 0,
       isPaid,
-      payrollId,
-      paidDate
+      payrollId: record?.id,
+      paidDate,
+      payslipUrl
     };
 
     this.recalculateModalNet();
@@ -772,13 +1317,12 @@ export class PayrollComponent implements OnInit {
   }
 
   recalculateModalNet() {
-    const base = this.selectedEmployeeForModal.salaryPerMonth;
-    const absent = this.modalData.absentDeduction;
+    const base = this.modalData.baseSalary || 0;
     const inc = this.modalData.incentives || 0;
     const alw = this.modalData.allowances || 0;
     const adv = this.modalData.advances || 0;
     
-    this.modalData.netPayable = base - absent + inc + alw - adv;
+    this.modalData.netPayable = base + inc + alw - adv;
   }
 
   closeModal() {
@@ -793,8 +1337,9 @@ export class PayrollComponent implements OnInit {
     // payload adjust allowances to store deduction in DB
     const payload = {
       incentives: this.modalData.incentives || 0,
-      allowances: (this.modalData.allowances || 0) - this.modalData.absentDeduction,
-      advancePayments: this.modalData.advances || 0
+      allowances: this.modalData.allowances || 0,
+      advancePayments: this.modalData.advances || 0,
+      baseSalary: this.modalData.baseSalary || 0
     };
 
     this.apiService.generatePayroll(
@@ -849,7 +1394,8 @@ export class PayrollComponent implements OnInit {
     const period = `${this.selectedMonth.toString().padStart(2, '0')}/${this.selectedYear}`;
     const today = this.modalData.paidDate ? new Date(this.modalData.paidDate).toLocaleDateString('en-GB') : '';
     
-    const baseSalary = (this.selectedEmployeeForModal.salaryPerMonth || 0).toFixed(2);
+    const perDaySalary = (this.selectedEmployeeForModal.perDaySalary || 0).toFixed(2);
+    const baseSalary = (this.modalData.baseSalary || 0).toFixed(2);
     const incentives = (this.modalData.incentives || 0).toFixed(2);
     const allowances = (this.modalData.allowances || 0).toFixed(2);
     const advances = (this.modalData.advances || 0).toFixed(2);
@@ -863,15 +1409,27 @@ export class PayrollComponent implements OnInit {
     doc.setLineWidth(0.02);
     doc.rect(0.5, 0.5, 13, 19);
 
+    const companyName = this.appSettings?.company?.name || "Shift EMS Manager Workspace";
+    const companyAddress = this.appSettings?.company?.address || "No. 123, 2nd Floor, Tech Park, Whitefield, Bengaluru - 560066";
+    const companyGst = this.appSettings?.company?.gst || "29ABCDE1234F1Z5";
+
     // Company Header
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
-    doc.text("Shift EMS Manager Workspace", 7, 1.8, { align: "center" });
+    doc.text(companyName, 7, 1.8, { align: "center" });
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text("No. 123, 2nd Floor, Tech Park, Whitefield, Bengaluru - 560066", 7, 2.4, { align: "center" });
-    doc.text("GSTIN : 29ABCDE1234F1Z5", 7, 2.8, { align: "center" });
+    // Split address if too long
+    const splitAddress = doc.splitTextToSize(companyAddress, 12);
+    let currentY = 2.4;
+    for (let i = 0; i < splitAddress.length; i++) {
+        doc.text(splitAddress[i], 7, currentY, { align: "center" });
+        currentY += 0.4;
+    }
+    
+    doc.text(`GSTIN : ${companyGst}`, 7, currentY, { align: "center" });
+
 
     // First horizontal divider
     doc.setLineWidth(0.04);
@@ -1196,5 +1754,3 @@ export class PayrollComponent implements OnInit {
     return depts[index];
   }
 }
-
-

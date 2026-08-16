@@ -1,4 +1,5 @@
 /* EMS Clean Enterprise Design System - Sleek Light Slate Theme */
+@import "@ng-select/ng-select/themes/default.theme.css";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
@@ -140,7 +141,43 @@ input, select, textarea {
   width: 100%;
 }
 
-input:focus, select:focus, textarea:focus {
+/* Beautiful Dropdown UI */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%232563eb%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1.1rem;
+  padding-right: 2.75rem;
+  cursor: pointer;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+}
+
+select:hover {
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+select:focus {
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px var(--color-primary-glow), var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+select option {
+  font-weight: 500;
+  padding: 0.5rem;
+  background-color: #ffffff;
+  color: var(--text-primary);
+}
+
+input:focus, textarea:focus {
   border-color: var(--color-primary);
   background: #ffffff;
   box-shadow: 0 0 0 3px var(--color-primary-glow);
@@ -431,4 +468,97 @@ input::placeholder, textarea::placeholder {
 .avatar-cell span {
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* Ng-Select Enterprise Theme Overrides */
+.ng-select.ng-select-single .ng-select-container {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1e293b;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  height: 42px;
+  min-height: 42px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ng-select.ng-select-single .ng-select-container:hover {
+  border-color: #94a3b8;
+  background-color: #ffffff;
+}
+
+.ng-select.ng-select-opened > .ng-select-container {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.ng-select.ng-select-focused:not(.ng-select-opened) > .ng-select-container {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  background-color: #ffffff;
+}
+
+/* Fix dropdown text alignment */
+.ng-select .ng-select-container .ng-value-container {
+  padding-left: 0.75rem;
+}
+.ng-select .ng-select-container .ng-value-container .ng-input > input {
+  font-family: inherit;
+}
+.ng-select.ng-select-single .ng-select-container .ng-value-container .ng-value {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Custom dropdown panel */
+.ng-dropdown-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  margin-top: 6px;
+  background-color: #ffffff;
+  overflow: hidden;
+  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option {
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.15s ease;
+}
+
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option:last-child {
+  border-bottom: none;
+}
+
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option:hover,
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-marked {
+  background-color: #f8fafc;
+  color: #0f172a;
+  padding-left: 1.25rem;
+}
+
+.ng-dropdown-panel .ng-dropdown-panel-items .ng-option.ng-option-selected {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 700;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Smaller variant for tables */
+.custom-table-select.ng-select-single .ng-select-container,
+.input-small.ng-select-single .ng-select-container {
+  height: 36px;
+  min-height: 36px;
+  font-size: 0.85rem;
 }

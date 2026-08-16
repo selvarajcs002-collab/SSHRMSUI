@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RegisterEmployeeComponent } from '../register-employee/register-employee.component';
 import { ShiftManagementComponent } from '../shift-management/shift-management.component';
-import { AttendanceComponent } from '../attendance/attendance.component';
+import { AttendanceComponent } from '../../pages/attendance/attendance.component';
 import { PayrollComponent } from '../payroll/payroll.component';
 import { SettingsComponent } from '../settings/settings.component';
 import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-overview.component';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -101,8 +102,8 @@ import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-over
       <!-- Main Section -->
       <div class="main-content">
         <!-- Top Navbar -->
-        <header class="navbar">
-          <div class="navbar-left" style="display: flex; flex-direction: column; gap: 0.35rem; justify-content: center;">
+        <header class="dashboard-topbar">
+          <div class="topbar-left" style="display: flex; flex-direction: column; gap: 0.35rem; justify-content: center;">
             <h2>{{ activeTabTitle }}</h2>
             <div class="breadcrumb-trail">
               <span class="root-crumb" (click)="setTab('overview')" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color=''">DASHBOARD</span>
@@ -111,7 +112,7 @@ import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-over
             </div>
           </div>
           
-          <div class="navbar-right">
+          <div class="topbar-right">
             <div class="time-widget">
               <i class="fa-regular fa-clock clock-icon"></i>
               <span>{{ liveTime }}</span>
@@ -121,7 +122,7 @@ import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-over
                 <i class="fa-solid fa-user-shield"></i>
               </div>
               <div class="user-details">
-                <span class="user-name">Administrator</span>
+                <span class="user-name">{{ userName }}</span>
                 <span class="user-email">{{ userEmail }}</span>
               </div>
             </div>
@@ -262,17 +263,17 @@ import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-over
     }
 
     /* Navbar styling */
-    .navbar {
-      background-color: transparent;
-      border: none;
-      box-shadow: none;
+    .dashboard-topbar {
+      background-color: var(--bg-main);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       height: 70px;
       padding: 0 1.75rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
-      top: 1.5rem;
+      top: 0;
       z-index: 100;
     }
     .breadcrumb-trail {
@@ -295,13 +296,14 @@ import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-over
       font-size: 0.65rem;
       color: var(--text-muted);
     }
-    .navbar h2 {
+    .dashboard-topbar h2 {
       font-size: 1.3rem;
       font-weight: 700;
       color: var(--text-primary);
       line-height: 1;
+      margin: 0;
     }
-    .navbar-right {
+    .topbar-right {
       display: flex;
       align-items: center;
       gap: 1.5rem;
@@ -364,19 +366,17 @@ import { DashboardOverviewComponent } from '../dashboard-overview/dashboard-over
 export class DashboardComponent implements OnInit, OnDestroy {
   activeTab = 'overview'; // default tab (Overview Dashboard)
   activeTabTitle = 'Overview Dashboard';
+  userName = 'Administrator';
   userEmail = 'admin@ems.local';
   liveTime = '';
   private timerId: any;
 
-  constructor(private router: Router) {
-    const token = localStorage.getItem('ems_token');
-    if (!token) {
-      this.router.navigate(['/login']);
-    }
-    
-    const savedEmail = localStorage.getItem('ems_user_email');
-    if (savedEmail) {
-      this.userEmail = savedEmail;
+  constructor(private router: Router, private authService: AuthService) {
+    // Relying on AuthGuard to protect the route, but double checking here isn't bad
+    const user = this.authService.getCurrentUser();
+    if (user) {
+      this.userName = `${user.firstName} ${user.lastName}`;
+      this.userEmail = user.email;
     }
   }
 
@@ -420,7 +420,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   onLogout() {
     if (confirm('Are you sure you want to logout?')) {
-      localStorage.clear();
+      this.authService.logout();
       this.router.navigate(['/login']);
     }
   }

@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { EmsApiService } from '../../services/ems-api.service';
+import { AppConfigService } from '../../core/services/app-config.service';
 
 @Component({
   selector: 'app-register-employee',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgSelectModule],
   template: `
     <div class="employee-section-wrapper animate-fade-in">
       
@@ -86,16 +88,7 @@ import { EmsApiService } from '../../services/ems-api.service';
                 />
               </div>
               
-              <!--
-              <select [(ngModel)]="selectedDept" (change)="onFilterChange()" class="select-dept-filter">
-                <option value="">All Departments</option>
-                <option *ngFor="let dept of departmentsList" [value]="dept.name">{{ dept.name }}</option>
-                <option *ngIf="departmentsList.length === 0" value="Engineering">Engineering</option>
-                <option *ngIf="departmentsList.length === 0" value="HR">HR</option>
-                <option *ngIf="departmentsList.length === 0" value="Production">Production</option>
-                <option *ngIf="departmentsList.length === 0" value="Quality">Quality</option>
-                <option *ngIf="departmentsList.length === 0" value="Sales">Sales</option>
-              </select>
+              <ng-select [(ngModel)]="selectedDept" (change)="onFilterChange()" [items]="departmentsList" bindLabel="name" bindValue="name" placeholder="All Departments" [clearable]="true" class="select-dept-filter"></ng-select>
               -->
             </div>
           </div>
@@ -302,8 +295,8 @@ import { EmsApiService } from '../../services/ems-api.service';
               </div>
               
               <div class="form-group">
-                <label>Last Name *</label>
-                <input type="text" name="lastName" [(ngModel)]="basic.lastName" required placeholder="e.g. Sharma" />
+                <label>Last Name</label>
+                <input type="text" name="lastName" [(ngModel)]="basic.lastName" placeholder="e.g. Sharma" />
               </div>
 
               <div class="form-group">
@@ -312,12 +305,11 @@ import { EmsApiService } from '../../services/ems-api.service';
               </div>
 
               <div class="form-group">
-                <label>Phone Number * (10 digits)</label>
+                <label>Phone Number (10 digits)</label>
                 <input 
                   type="text" 
                   name="phoneNumber" 
                   [(ngModel)]="basic.phoneNumber" 
-                  required 
                   maxlength="10"
                   (keypress)="onlyNumbers($event)"
                   (input)="onPhoneInput($event, 'basic')"
@@ -326,76 +318,60 @@ import { EmsApiService } from '../../services/ems-api.service';
               </div>
 
               <div class="form-group">
-                <label>Date of Birth * <i *ngIf="isEditing" class="fa-solid fa-lock ms-1" style="color: #6b7280; font-size: 0.8rem;" title="Identity fields cannot be modified after registration"></i></label>
-                <input type="date" name="dob" [(ngModel)]="extra.dob" required [disabled]="isEditing" />
+                <label>Date of Birth <i *ngIf="isEditing" class="fa-solid fa-lock ms-1" style="color: #6b7280; font-size: 0.8rem;" title="Identity fields cannot be modified after registration"></i></label>
+                <input type="date" name="dob" [(ngModel)]="extra.dob" [disabled]="isEditing" />
               </div>
 
               <div class="form-group">
-                <label>Gender *</label>
-                <select name="gender" [(ngModel)]="extra.gender" required>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
+                <label>Gender</label>
+                <ng-select name="gender" [(ngModel)]="extra.gender" [items]="['Male', 'Female', 'Other']" [clearable]="false"></ng-select>
               </div>
 
               <!-- Designation Selector -->
               <div class="form-group">
-                <label>Designation *</label>
-                <select name="designation" [(ngModel)]="basic.designation" required>
-                  <option value="" disabled selected>Select Designation...</option>
-                  <option value="Software Engineer">Software Engineer</option>
-                  <option value="Senior Software Engineer">Senior Software Engineer</option>
-                  <option value="HR Manager">HR Manager</option>
-                  <option value="Production Operator">Production Operator</option>
-                  <option value="Quality Control Inspector">Quality Control Inspector</option>
-                  <option value="Technician">Technician</option>
-                </select>
+                <label>Designation</label>
+                <ng-select name="designation" [(ngModel)]="basic.designation" [items]="appDesignations" placeholder="Select Designation..." [clearable]="true"></ng-select>
               </div>
 
               <div class="form-group">
-                <label>Marital Status *</label>
-                <select name="maritalStatus" [(ngModel)]="basic.maritalStatus" required>
-                  <option value="Single">Single</option>
-                  <option value="Married">Married</option>
-                  <option value="Divorced">Divorced</option>
-                </select>
+                <label>Marital Status</label>
+                <ng-select name="maritalStatus" [(ngModel)]="basic.maritalStatus" [items]="['Single', 'Married', 'Divorced']" [clearable]="false"></ng-select>
               </div>
 
               <div class="form-group">
-                <label>Nationality *</label>
-                <input type="text" name="nationality" [(ngModel)]="extra.nationality" required placeholder="e.g. Indian" />
+                <label>Nationality</label>
+                <input type="text" name="nationality" [(ngModel)]="extra.nationality" placeholder="e.g. Indian" />
               </div>
 
               <div class="form-group span-3">
-                <label>Address *</label>
-                <input type="text" name="address" [(ngModel)]="basic.address" required placeholder="123, Green Park, New Delhi - 110016" />
+                <label>Address</label>
+                <input type="text" name="address" [(ngModel)]="basic.address" placeholder="123, Green Park, New Delhi - 110016" />
               </div>
 
               <!-- Required Compliance fields for API -->
               <div class="form-group">
-                <label>Aadhaar Number * (12 digits) <i *ngIf="isEditing" class="fa-solid fa-lock ms-1" style="color: #6b7280; font-size: 0.8rem;" title="Identity fields cannot be modified after registration"></i></label>
-                <input type="text" name="aadhaar" [(ngModel)]="basic.aadhaarNumber" required pattern="^[0-9]{12}$" placeholder="Aadhaar No." [disabled]="isEditing" />
+                <label>Aadhaar Number (12 digits) <i *ngIf="isEditing" class="fa-solid fa-lock ms-1" style="color: #6b7280; font-size: 0.8rem;" title="Identity fields cannot be modified after registration"></i></label>
+                <input type="text" name="aadhaar" [(ngModel)]="basic.aadhaarNumber" pattern="^[0-9]{12}$" placeholder="Aadhaar No." [disabled]="isEditing" />
               </div>
 
               <div class="form-group">
-                <label>City *</label>
-                <input type="text" name="city" [(ngModel)]="basic.city" required placeholder="City" />
+                <label>City</label>
+                <input type="text" name="city" [(ngModel)]="basic.city" placeholder="City" />
               </div>
 
               <div class="form-group">
-                <label>State *</label>
-                <input type="text" name="state" [(ngModel)]="basic.state" required placeholder="State" />
+                <label>State</label>
+                <input type="text" name="state" [(ngModel)]="basic.state" placeholder="State" />
               </div>
 
               <div class="form-group">
-                <label>District *</label>
-                <input type="text" name="district" [(ngModel)]="basic.district" required placeholder="District" />
+                <label>District</label>
+                <input type="text" name="district" [(ngModel)]="basic.district" placeholder="District" />
               </div>
 
               <div class="form-group">
-                <label>Pincode *</label>
-                <input type="text" name="pincode" [(ngModel)]="basic.pincode" required placeholder="Pincode" />
+                <label>Pincode</label>
+                <input type="text" name="pincode" [(ngModel)]="basic.pincode" placeholder="Pincode" />
               </div>
 
               <div class="form-group">
@@ -409,8 +385,8 @@ import { EmsApiService } from '../../services/ems-api.service';
               </div>
 
               <div class="form-group">
-                <label>Monthly Base Salary * (INR)</label>
-                <input type="number" name="salary" [(ngModel)]="basic.salaryPerMonth" required min="1" placeholder="Salary Amount" />
+                <label>Per Day Salary * (INR)</label>
+                <input type="number" name="salary" [(ngModel)]="basic.perDaySalary" required min="1" placeholder="Salary Amount" />
               </div>
 
               <div class="form-group">
@@ -486,14 +462,14 @@ import { EmsApiService } from '../../services/ems-api.service';
               <i class="fa-regular fa-folder-open section-icon"></i>
               <div>
                 <h3>Documents Upload</h3>
-                <p>Upload mandatory verification files. Aadhaar is required. Bank statement is required if bank info is entered.</p>
+                <p>Upload verification files. Aadhaar is optional. Bank statement is optional.</p>
               </div>
             </div>
 
             <div class="upload-grid mt-4">
               <!-- Aadhaar card -->
               <div class="upload-item-card">
-                <h4>Aadhaar Card (Mandatory)</h4>
+                <h4>Aadhaar Card</h4>
                 <div class="custom-file-uploader" [class.uploaded]="aadharUploaded">
                   <i class="fa-regular" [class.fa-file-pdf]="!aadharUploaded" [class.fa-circle-check]="aadharUploaded"></i>
                   <span class="file-prompt" *ngIf="!aadharUploaded">Choose Aadhaar PDF or Image</span>
@@ -504,7 +480,7 @@ import { EmsApiService } from '../../services/ems-api.service';
 
               <!-- Bank passbook -->
               <div class="upload-item-card" *ngIf="hasEnteredBank">
-                <h4>Bank Passbook Page (Mandatory)</h4>
+                <h4>Bank Passbook Page</h4>
                 <div class="custom-file-uploader" [class.uploaded]="passbookUploaded">
                   <i class="fa-regular" [class.fa-image]="!passbookUploaded" [class.fa-circle-check]="passbookUploaded"></i>
                   <span class="file-prompt" *ngIf="!passbookUploaded">Choose Bank Front Page (PDF/Image)</span>
@@ -570,8 +546,8 @@ import { EmsApiService } from '../../services/ems-api.service';
                       <span class="rev-val">{{ basic.address }}, {{ basic.city }} - {{ basic.pincode }}</span>
                     </div>
                     <div class="review-row">
-                      <span class="rev-lbl">Monthly Base Salary:</span>
-                      <span class="rev-val text-success">INR {{ basic.salaryPerMonth | number }}</span>
+                      <span class="rev-lbl">Per Day Salary:</span>
+                      <span class="rev-val text-success">INR {{ basic.perDaySalary | number }}</span>
                     </div>
                   </div>
                 </div>
@@ -1404,7 +1380,7 @@ export class RegisterEmployeeComponent implements OnInit {
     panNumber: '',
     bloodGroup: '',
     maritalStatus: 'Single',
-    salaryPerMonth: 0,
+    perDaySalary: 0,
     referral: '',
     email: '',
     designation: '',
@@ -1428,9 +1404,12 @@ export class RegisterEmployeeComponent implements OnInit {
     nationality: 'Indian'
   };
 
-  constructor(private apiService: EmsApiService) {}
+  appDesignations: string[] = [];
+
+  constructor(private apiService: EmsApiService, private appConfig: AppConfigService) {}
 
   ngOnInit() {
+    this.appDesignations = this.appConfig.getAppDesignations();
     this.loadEmployeesList();
     this.loadDepartments();
   }
@@ -1585,6 +1564,12 @@ export class RegisterEmployeeComponent implements OnInit {
         this.employeeId = fullEmp.id;
         
         this.basic = fullEmp.basicDetails;
+        
+        // Handle transition period where API might still return salaryPerMonth if not restarted
+        if (this.basic.perDaySalary === undefined && (fullEmp.basicDetails as any).salaryPerMonth !== undefined) {
+          this.basic.perDaySalary = (fullEmp.basicDetails as any).salaryPerMonth;
+        }
+
         this.extra = {
           dob: fullEmp.basicDetails?.dateOfBirth ? fullEmp.basicDetails.dateOfBirth.split('T')[0] : '',
           gender: fullEmp.basicDetails?.gender || 'Male',
@@ -1853,7 +1838,7 @@ export class RegisterEmployeeComponent implements OnInit {
           emp.phoneNumber,
           emp.city,
           emp.state,
-          emp.salaryPerMonth || 0,
+          emp.perDaySalary || 0,
           emp.status === 1 || emp.status === 'Active' ? 'Active' : 'Inactive'
         ]);
 
@@ -1913,7 +1898,7 @@ export class RegisterEmployeeComponent implements OnInit {
       panNumber: '',
       bloodGroup: '',
       maritalStatus: 'Single',
-      salaryPerMonth: 0,
+      perDaySalary: 0,
       referral: '',
       email: '',
       designation: '',
