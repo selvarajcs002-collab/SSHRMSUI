@@ -14,6 +14,7 @@ export class AppConfigService {
     Attendance: [],
     Machines: []
   };
+  private apiBaseUrl: string = 'http://200.141.4.172:6000';
 
   // Centralized static config as fallback/default
   private defaultConfig: HrmsConfig = {
@@ -47,6 +48,11 @@ export class AppConfigService {
         if (config && config.AppConstants) {
           this.appConstants = config.AppConstants;
         }
+        if (config && config.ApiSettings && config.ApiSettings.emb_base_url) {
+          this.apiBaseUrl = config.ApiSettings.emb_base_url;
+        } else if (config && config.ApiSettings && config.ApiSettings.BaseUrl) {
+          this.apiBaseUrl = config.ApiSettings.BaseUrl;
+        }
       }),
       catchError(() => {
         return of(null);
@@ -68,6 +74,10 @@ export class AppConfigService {
 
   getAppMachines(): string[] {
     return this.appConstants.Machines || [];
+  }
+
+  getApiBaseUrl(): string {
+    return this.apiBaseUrl;
   }
 
   getConfig(): Observable<HrmsConfig> {

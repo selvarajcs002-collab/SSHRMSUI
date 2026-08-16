@@ -3,13 +3,17 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+import { AppConfigService } from '../core/services/app-config.service';
+
 @Injectable({
   providedIn: 'root'
 })
 export class EmsApiService {
-  baseUrl = 'http://localhost:5263/api/ems';
+  baseUrl = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private configService: AppConfigService) { 
+    this.baseUrl = `${this.configService.getApiBaseUrl()}/api/ems`;
+  }
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('ems_token');
