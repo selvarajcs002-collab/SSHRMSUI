@@ -102,7 +102,7 @@ export class AuthService {
         }
 
         let errorMsg = 'Unable to connect to the login server. Please try again.';
-        
+
         if (error.error?.message) {
           errorMsg = error.error.message;
         } else if (error.error && typeof error.error === 'string') {
@@ -110,7 +110,7 @@ export class AuthService {
         } else if (error.status === 401 || error.status === 400) {
           errorMsg = 'Invalid email or password.';
         }
-        
+
         return throwError(() => new Error(errorMsg));
       })
     );

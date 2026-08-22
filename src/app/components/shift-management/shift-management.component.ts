@@ -96,12 +96,17 @@ import { AppConfigService } from '../../core/services/app-config.service';
                 </div>
               </td>
               <td>
-                <div class="machine-radio-group">
-                  <label class="custom-radio" *ngFor="let mach of machines" [class.is-active]="getEmpMachineName(emp.id) === mach.name">
-                    <input type="checkbox" #chk [checked]="getEmpMachineName(emp.id) === mach.name" (change)="onGridMachineChange(emp, chk.checked ? mach.name : '')" />
-                    <span class="radio-mark"></span>
-                    <span class="label-text">{{ mach.name }}</span>
-                  </label>
+                <div class="machine-select-group" style="width: 250px; min-width: 200px;">
+                  <ng-select
+                    [items]="machines"
+                    bindLabel="name"
+                    bindValue="name"
+                    placeholder="Select Workstation"
+                    [ngModel]="getEmpMachineName(emp.id)"
+                    (ngModelChange)="onGridMachineChange(emp, $event || '')"
+                    [clearable]="true"
+                    class="modern-ng-select">
+                  </ng-select>
                 </div>
               </td>
               <td>
