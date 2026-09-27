@@ -1,0 +1,113 @@
+<div class="page-header">
+  <div class="header-title">
+    <div class="icon-box">
+      <i class="fa-solid fa-users-viewfinder"></i>
+    </div>
+    <div>
+      <h2>Assign Shift</h2>
+      <p>Assign day or night shift to your employees</p>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-stats-grid mb-6">
+  <div class="stat-widget-card stat-day">
+    <div class="stat-icon-wrapper text-warning bg-warning-glow">
+      <i class="fa-regular fa-sun"></i>
+    </div>
+    <div class="stat-info">
+      <span>Day Shift (Morning)</span>
+      <h3>{{ dayCount }}</h3>
+      <div class="stat-trend">Employees assigned</div>
+    </div>
+  </div>
+
+  <div class="stat-widget-card stat-night">
+    <div class="stat-icon-wrapper text-primary bg-primary-glow">
+      <i class="fa-solid fa-moon"></i>
+    </div>
+    <div class="stat-info">
+      <span>Night Shift</span>
+      <h3>{{ nightCount }}</h3>
+      <div class="stat-trend">Employees assigned</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass-card table-wrapper">
+  <div class="table-controls">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search by name or designation..." (input)="onSearch($event)">
+    </div>
+    <div class="total-count">
+      Total Employees: <strong>{{ employees.length }}</strong>
+    </div>
+  </div>
+
+  <div class="ems-table-container">
+    <table class="ems-table">
+      <thead>
+        <tr>
+          <th (click)="sortBy('employeeId')" class="cursor-pointer">
+            S.No <i class="fa-solid {{ getSortIcon('employeeId') }} ml-1"></i>
+          </th>
+          <th (click)="sortBy('name')" class="cursor-pointer">
+            Name <i class="fa-solid {{ getSortIcon('name') }} ml-1"></i>
+          </th>
+          <th (click)="sortBy('designation')" class="cursor-pointer">
+            Designation <i class="fa-solid {{ getSortIcon('designation') }} ml-1"></i>
+          </th>
+          <th (click)="sortBy('shift')" class="cursor-pointer">
+            Shift <i class="fa-solid {{ getSortIcon('shift') }} ml-1"></i>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of filteredEmployees">
+          <td>{{ emp.employeeId }}</td>
+          <td>
+            <div class="avatar-cell">
+              <div class="avatar-circle">{{ emp.name.charAt(0) }}</div>
+              <span class="font-semibold">{{ emp.name }}</span>
+            </div>
+          </td>
+          <td>{{ emp.designation }}</td>
+          <td>
+            <div class="shift-toggle-wrapper" (click)="toggleShift(emp)">
+              <div class="shift-icon" [class.active]="emp.shift === 'Morning'">
+                <i class="fa-regular fa-sun" *ngIf="emp.shift === 'Morning'"></i>
+              </div>
+              
+              <div class="toggle-switch" [class.is-night]="emp.shift === 'Night'">
+                <div class="toggle-knob"></div>
+              </div>
+              
+              <div class="shift-icon" [class.active]="emp.shift === 'Night'">
+                <i class="fa-solid fa-moon" *ngIf="emp.shift === 'Night'"></i>
+              </div>
+              <span class="shift-label">{{ emp.shift }}</span>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredEmployees.length === 0">
+          <td colspan="4" class="text-center py-4">No employees found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="flex justify-end mt-4 pt-4 border-t border-color">
+    <button class="btn btn-primary px-6 py-3" (click)="saveAssignments()">
+      <i class="fa-solid fa-floppy-disk"></i> Save Shift Assignments
+    </button>
+  </div>
+</div>
+
+<!-- Success Toast -->
+<div class="toast-container" *ngIf="showSuccessToast">
+  <div class="toast success-toast animate-fade-in">
+    <i class="fa-solid fa-check-circle"></i>
+    <span>Shift Assignments Saved Successfully!</span>
+  </div>
+</div>
