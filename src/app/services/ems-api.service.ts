@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { AppConfigService } from '../core/services/app-config.service';
+import { MarkSalaryPaidRequest, SalaryDetails, SalarySummary, SaveSalaryDetailsRequest } from '../models/salary-details.model';
 
 @Injectable({
   providedIn: 'root'
@@ -87,10 +88,10 @@ export class EmsApiService {
     if (search) {
       params = params.set('search', search);
     }
-    return this.http.get(`${this.baseUrl}/employees`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`${this.configService.getApiBaseUrl()}/api/Employee`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => ({
-        items: res.data,
-        totalCount: res.count
+        items: res.items || res.Items || [],
+        totalCount: res.totalRecords || res.TotalRecords || 0
       }))
     );
   }
@@ -335,4 +336,105 @@ export class EmsApiService {
       map((res: any) => res.data)
     );
   }
+  // --- SALARY DETAILS ---
+  createSalaryDetails(dto: SaveSalaryDetailsRequest): Observable<SalaryDetails> {
+    return this.http.post(`${this.configService.getApiBaseUrl()}/api/salary-details`, dto, { headers: this.getHeaders() }).pipe(
+      map((res: any) => res.data)
+    );
+  }
+
+  getSalaryDetails(employeeId?: number, fromDate?: string, toDate?: string): Observable<SalaryDetails[]> {
+    let params = new HttpParams();
+    if (employeeId) params = params.set('employeeId', employeeId.toString());
+    if (fromDate) params = params.set('fromDate', fromDate);
+    if (toDate) params = params.set('toDate', toDate);
+    
+    return this.http.get(`${this.configService.getApiBaseUrl()}/api/salary-details`, { headers: this.getHeaders(), params }).pipe(
+      map((res: any) => res.data || [])
+    );
+  }
+
+  updateSalaryDetails(employeeId: number, dto: SaveSalaryDetailsRequest): Observable<SalaryDetails> {
+    return this.http.put(`${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}`, dto, { headers: this.getHeaders() }).pipe(
+      map((res: any) => res.data)
+    );
+  }
+
+  getSalaryDetailsByEmployee(employeeId: number, fromDate?: string, toDate?: string): Observable<SalaryDetails[]> {
+    let params = new HttpParams();
+    if (fromDate) params = params.set('fromDate', fromDate);
+    if (toDate) params = params.set('toDate', toDate);
+    
+    return this.http.get(`${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}`, { headers: this.getHeaders(), params }).pipe(
+      map((res: any) => res.data || [])
+    );
+  }
+
+  getSalarySummary(fromDate: string, toDate: string): Observable<SalarySummary> {
+    const params = new HttpParams()
+      .set('fromDate', fromDate)
+      .set('toDate', toDate);
+
+    return this.http.get(`${this.configService.getApiBaseUrl()}/api/salary-details/summary`, { headers: this.getHeaders(), params }).pipe(
+      map((res: any) => res.data)
+    );
+  }
+
+  markSalaryAsPaid(employeeId: number, request: MarkSalaryPaidRequest): Observable<SalaryDetails> {
+    return this.http.post(
+      `${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}/mark-paid`,
+      request,
+      { headers: this.getHeaders() }
+    ).pipe(
+      map((res: any) => res.data)
+    );
+  }
+
+  generatePayslip(employeeId: number, request: PayslipRequest): Observable<Blob> {
+    return this.http.post(
+      `${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}/payslip`,
+      request,
+      {
+        headers: this.getHeaders(),
+        responseType: 'blob',
+        observe: 'response'
+      }
+    ).pipe(
+      map((response) => {
+        const fileName = this.getPayslipFileName(response.headers.get('Content-Disposition'));
+        return new File([response.body ?? new Blob()], fileName, { type: 'application/pdf' });
+      })
+    );
+  }
+
+  private getPayslipFileName(contentDisposition: string | null): string {
+    if (!contentDisposition) {
+      return 'Payslip.pdf';
+    }
+
+    const utfMatch = /filename\*=UTF-8''([^;]+)/i.exec(contentDisposition);
+    if (utfMatch?.[1]) {
+      return decodeURIComponent(utfMatch[1].replace(/"/g, '').trim());
+    }
+
+    const match = /filename="?([^";]+)"?/i.exec(contentDisposition);
+    return match?.[1]?.trim() || 'Payslip.pdf';
+  }
+}
+
+export interface PayslipRequest {
+  employeeId: number;
+  salaryMonth: string;
+  salaryFromDate: string;
+  salaryToDate: string;
+  employeeName: string;
+  employeeCode: string;
+  designation: string;
+  perDaySalary: number;
+  presentDays: number;
+  absentDays: number;
+  halfDays: number;
+  incentive: number;
+  advance: number;
+  remarks: string;
 }
