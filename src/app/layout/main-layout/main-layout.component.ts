@@ -41,18 +41,6 @@ import { filter } from 'rxjs/operators';
             <span>Salary Management</span>
           </a>
 
-          <div class="menu-divider"></div>
-
-          <a routerLink="#" class="menu-item">
-            <i class="fa-solid fa-chart-line"></i>
-            <span>Dashboard</span>
-          </a>
-
-          <a routerLink="#" class="menu-item">
-            <i class="fa-solid fa-sliders"></i>
-            <span>Settings</span>
-          </a>
-
           <button (click)="onLogout()" class="menu-item logout-btn">
             <i class="fa-solid fa-right-from-bracket"></i>
             <span>Logout</span>
