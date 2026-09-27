@@ -110,7 +110,7 @@ export class AttendanceService {
       if (!isNaN(d.getTime())) {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }
-      return date; 
+      return date;
     }
     // If it's a Date object
     const year = date.getFullYear();
@@ -163,6 +163,7 @@ export class AttendanceService {
       );
   }
 
+
   /**
    * 2. POST /api/Attendance
    * Bulk insert or update attendance records for a specific date and shift.
@@ -204,7 +205,7 @@ export class AttendanceService {
   updateAttendance(employeeId: number, request: AttendanceRequest): Observable<AttendanceResponse> {
     // Ensure calendar-day format
     request.attendanceDate = this.formatDate(request.attendanceDate);
-    
+
     return this.http.put<AttendanceResponse>(`${this.apiUrl}/Attendance/${employeeId}`, request)
       .pipe(
         catchError(error => {
