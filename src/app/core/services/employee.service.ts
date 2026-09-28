@@ -17,7 +17,7 @@ import {
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = 'http://200.141.4.172:6001/api/Employee';
+  private apiUrl = 'http://200.141.4.172:6000/api/Employee';
 
   constructor(private http: HttpClient) { }
 

@@ -95,7 +95,7 @@ export interface AttendanceEmployeeDetail {
 })
 export class AttendanceService {
   // Matches the convention used in employee.service.ts
-  private apiUrl = 'http://200.141.4.172:6001/api';
+  private apiUrl = 'http://200.141.4.172:6000/api';
 
   constructor(private http: HttpClient) { }
 

@@ -14,7 +14,7 @@ export interface AttendanceRecord {
   providedIn: 'root'
 })
 export class AttendanceApiService {
-  private apiUrl = 'http://200.141.4.172:6001/api/Attendance';
+  private apiUrl = 'http://200.141.4.172:6000/api/Attendance';
 
   constructor(private http: HttpClient) { }
 
