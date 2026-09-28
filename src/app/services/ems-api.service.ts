@@ -13,7 +13,7 @@ export class EmsApiService {
   baseUrl = '';
 
   constructor(private http: HttpClient) {
-    this.baseUrl = `http://200.141.4.172:6001/api/ems`;
+    this.baseUrl = `http://200.141.4.172:6003/api/ems`;
   }
 
   private getHeaders(): HttpHeaders {
@@ -88,7 +88,7 @@ export class EmsApiService {
     if (search) {
       params = params.set('search', search);
     }
-    return this.http.get(`http://200.141.4.172:6001/api/Employee`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`http://200.141.4.172:6003/api/Employee`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => ({
         items: res.items || res.Items || [],
         totalCount: res.totalRecords || res.TotalRecords || 0
@@ -338,7 +338,7 @@ export class EmsApiService {
   }
   // --- SALARY DETAILS ---
   createSalaryDetails(dto: SaveSalaryDetailsRequest): Observable<SalaryDetails> {
-    return this.http.post(`http://200.141.4.172:6001/api/salary-details`, dto, { headers: this.getHeaders() }).pipe(
+    return this.http.post(`http://200.141.4.172:6003/api/salary-details`, dto, { headers: this.getHeaders() }).pipe(
       map((res: any) => res.data)
     );
   }
@@ -349,13 +349,13 @@ export class EmsApiService {
     if (fromDate) params = params.set('fromDate', fromDate);
     if (toDate) params = params.set('toDate', toDate);
 
-    return this.http.get(`http://200.141.4.172:6001/api/salary-details`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`http://200.141.4.172:6003/api/salary-details`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => res.data || [])
     );
   }
 
   updateSalaryDetails(employeeId: number, dto: SaveSalaryDetailsRequest): Observable<SalaryDetails> {
-    return this.http.put(`http://200.141.4.172:6001/api/salary-details/${employeeId}`, dto, { headers: this.getHeaders() }).pipe(
+    return this.http.put(`http://200.141.4.172:6003/api/salary-details/${employeeId}`, dto, { headers: this.getHeaders() }).pipe(
       map((res: any) => res.data)
     );
   }
@@ -365,7 +365,7 @@ export class EmsApiService {
     if (fromDate) params = params.set('fromDate', fromDate);
     if (toDate) params = params.set('toDate', toDate);
 
-    return this.http.get(`http://200.141.4.172:6001/api/salary-details/${employeeId}`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`http://200.141.4.172:6003/api/salary-details/${employeeId}`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => res.data || [])
     );
   }
@@ -375,14 +375,14 @@ export class EmsApiService {
       .set('fromDate', fromDate)
       .set('toDate', toDate);
 
-    return this.http.get(`http://200.141.4.172:6001/api/salary-details/summary`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`http://200.141.4.172:6003/api/salary-details/summary`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => res.data)
     );
   }
 
   markSalaryAsPaid(employeeId: number, request: MarkSalaryPaidRequest): Observable<SalaryDetails> {
     return this.http.post(
-      `http://200.141.4.172:6001/api/salary-details/${employeeId}/mark-paid`,
+      `http://200.141.4.172:6003/api/salary-details/${employeeId}/mark-paid`,
       request,
       { headers: this.getHeaders() }
     ).pipe(
@@ -392,7 +392,7 @@ export class EmsApiService {
 
   generatePayslip(employeeId: number, request: PayslipRequest): Observable<Blob> {
     return this.http.post(
-      `http://200.141.4.172:6001/api/salary-details/${employeeId}/payslip`,
+      `http://200.141.4.172:6003/api/salary-details/${employeeId}/payslip`,
       request,
       {
         headers: this.getHeaders(),
