@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AppConfigService } from './app-config.service';
 
 export interface AttendanceRecord {
   id: string;
@@ -14,9 +15,11 @@ export interface AttendanceRecord {
   providedIn: 'root'
 })
 export class AttendanceApiService {
-  private apiUrl = 'http://localhost:6002/api/Attendance';
+  get apiUrl(): string {
+    return `${this.configService.getApiBaseUrl()}/api/Attendance`;
+  }
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: AppConfigService) { }
 
   getAttendance(date: string, shift: string): Observable<AttendanceRecord[]> {
     let params = new HttpParams()
