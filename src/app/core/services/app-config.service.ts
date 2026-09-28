@@ -14,7 +14,7 @@ export class AppConfigService {
     Attendance: [],
     Machines: []
   };
-  private apiBaseUrl: string = 'http://200.141.4.172:6000';
+  private apiBaseUrl: string = 'http://200.141.4.172:6003';
 
   // Centralized static config as fallback/default
   private defaultConfig: HrmsConfig = {
