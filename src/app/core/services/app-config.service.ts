@@ -14,6 +14,7 @@ export class AppConfigService {
     Attendance: [],
     Machines: []
   };
+  private apiBaseUrl: string = 'http://200.141.4.172:6000';
 
   // Centralized static config as fallback/default
   private defaultConfig: HrmsConfig = {
@@ -39,13 +40,18 @@ export class AppConfigService {
     ]
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   loadConfig(): Observable<any> {
     return this.http.get('/assets/appsettings.json').pipe(
       tap((config: any) => {
         if (config && config.AppConstants) {
           this.appConstants = config.AppConstants;
+        }
+        if (config && config.ApiSettings && config.ApiSettings.emb_base_url) {
+          this.apiBaseUrl = config.ApiSettings.emb_base_url;
+        } else if (config && config.ApiSettings && config.ApiSettings.BaseUrl) {
+          this.apiBaseUrl = config.ApiSettings.BaseUrl;
         }
       }),
       catchError(() => {
@@ -70,6 +76,10 @@ export class AppConfigService {
     return this.appConstants.Machines || [];
   }
 
+  getApiBaseUrl(): string {
+    return this.apiBaseUrl;
+  }
+
   getConfig(): Observable<HrmsConfig> {
     // In a real app, this might fetch from an API endpoint once and cache it.
     return of(this.defaultConfig);
@@ -82,7 +92,7 @@ export class AppConfigService {
   getAttendanceStatuses(): AttendanceStatus[] {
     return this.defaultConfig.attendanceStatuses;
   }
-  
+
   getDepartments(): Department[] {
     return this.defaultConfig.departments;
   }

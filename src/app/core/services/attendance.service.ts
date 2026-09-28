@@ -1,173 +1,278 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { AttendanceRecord, AttendanceFilter, AttendanceSummary } from '../models/attendance.model';
-import { EmsApiService } from '../../services/ems-api.service';
+import { AppConfigService } from './app-config.service';
+
+
+export interface AttendanceRequest {
+  employeeId: number;
+  attendanceDate: string;
+  shift: string;
+  status: string;
+  remarks?: string | null;
+}
+
+export interface BulkAttendanceRequest {
+  attendanceDate: string;
+  shift: string;
+  attendance: AttendanceRequest[];
+}
+
+export interface AttendanceResponse {
+  attendanceId?: number | null;
+  employeeId: number;
+  employeeCode?: string | null;
+  name?: string | null;
+  designation?: string | null;
+  attendanceDate: string;
+  shift: string;
+  status?: string | null;
+  remarks?: string | null;
+}
+
+export interface AttendanceSummary {
+  totalEmployees: number;
+  presentCount: number;
+  leaveCount: number;
+  halfDayCount: number;
+}
+
+export interface AttendanceListResponse {
+  attendanceDate: string;
+  shift?: string | null;
+  totalEmployees: number;
+  presentCount: number;
+  leaveCount: number;
+  halfDayCount: number;
+  employees: AttendanceResponse[];
+}
+
+export interface AttendancePeriodSummary {
+  employeeId: number;
+  employeeCode: string;
+  employeeName: string;
+  shift: string;
+  presentDays: number;
+  absentDays: number;
+  halfDays: number;
+  notMarkedDays: number;
+}
+
+export interface SaveEmployeeAttendanceRequest {
+  employeeId: number;
+  attendanceDate: string;
+  status: string;
+  remarks?: string;
+}
+
+export interface AttendanceDateStatus {
+  attendanceDate: string;
+  status: string;
+  shift?: string;
+  remarks?: string | null;
+}
+
+export interface AttendanceEmployeeDetail {
+  employeeId: number;
+  employeeCode: string;
+  employeeName: string;
+  designation?: string;
+  shift: string;
+  fromDate: string;
+  toDate: string;
+  presentDays: number;
+  absentDays: number;
+  halfDays: number;
+  notMarkedDays: number;
+  absentDates: string[];
+  halfDayDates: string[];
+  notMarkedDates: string[];
+  allDates: AttendanceDateStatus[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AttendanceService {
-
-  constructor(private apiService: EmsApiService) {}
-
-  // Get attendance records mapped to the new model
-  getAttendance(filter: AttendanceFilter): Observable<AttendanceRecord[]> {
-    // We leverage the existing API and map it, or use the exact endpoint if it supports these filters.
-    // For now, we simulate fetching employees and merging with daily attendance from existing EmsApiService
-    return new Observable<AttendanceRecord[]>(observer => {
-      this.apiService.getEmployees(1, 1000).subscribe({
-        next: (empRes) => {
-          this.apiService.getAllShiftAssignments().subscribe({
-            next: (shifts) => {
-              this.apiService.getDailyAttendance(filter.date).subscribe({
-                next: (logRes) => {
-                  let records: AttendanceRecord[] = [];
-                  
-                  // Map shift assignments
-                  let shiftMap: { [empId: string]: number } = {};
-                  shifts.forEach((asg: any) => {
-                    shiftMap[asg.employeeId] = asg.shiftType === 'Morning' || asg.shiftType === 1 ? 1 : 2;
-                  });
-
-                  // Map attendance logs
-                  let attMap: { [empId: string]: any } = {};
-                  logRes.records.forEach((r: any) => {
-                    attMap[r.employeeId] = r;
-                  });
-
-                  // Build unified records
-                  empRes.items.forEach((emp: any) => {
-                    if (emp.status === 'Active') {
-                      let empShift = shiftMap[emp.id] || 1;
-                      // Filter by selected shift
-                      if (empShift.toString() === filter.shift.toString()) {
-                        let log = attMap[emp.id];
-                        let statusName = 'ABSENT'; // Default
-                        let remarks = '';
-                        
-                        if (log) {
-                          if (log.status === 'Present' || log.status === 1) {
-                            if (log.remarks === 'Half Day') {
-                              statusName = 'HALF DAY';
-                            } else {
-                              statusName = 'PRESENT';
-                            }
-                          } else {
-                            statusName = 'ABSENT';
-                          }
-                          remarks = log.remarks || '';
-                        }
-
-                        records.push({
-                          id: log?.id,
-                          employeeId: emp.id,
-                          employeeCode: emp.employeeCode,
-                          employeeName: emp.fullName,
-                          employeePhoto: emp.profilePicture,
-                          department: 'Production', // Mocked as the existing API doesn't return dept details
-                          designation: emp.designation || 'N/A',
-                          shift: empShift,
-                          attendanceDate: filter.date,
-                          status: statusName,
-                          remarks: remarks,
-                          lastUpdated: new Date().toISOString(),
-                          lastUpdatedBy: 'Admin',
-                          isModified: false
-                        });
-                      }
-                    }
-                  });
-
-                  // Apply text search filter
-                  if (filter.searchQuery) {
-                    const q = filter.searchQuery.toLowerCase();
-                    records = records.filter(r => 
-                      r.employeeName.toLowerCase().includes(q) || 
-                      r.employeeCode.toLowerCase().includes(q)
-                    );
-                  }
-
-                  // Apply department filter
-                  if (filter.department && filter.department !== 'all') {
-                    records = records.filter(r => r.department === filter.department);
-                  }
-
-                  // Apply designation filter
-                  if (filter.designation && filter.designation !== 'all') {
-                    records = records.filter(r => r.designation === filter.designation);
-                  }
-
-                  // Apply status filter
-                  if (filter.status && filter.status !== 'all') {
-                    records = records.filter(r => r.status === filter.status);
-                  }
-
-                  observer.next(records);
-                  observer.complete();
-                },
-                error: (err) => observer.error(err)
-              });
-            },
-            error: (err) => observer.error(err)
-          });
-        },
-        error: (err) => observer.error(err)
-      });
-    });
+  private get apiUrl(): string {
+    return `${this.appConfig.getApiBaseUrl()}/api`;
   }
 
-  // Update a single attendance record
-  updateAttendance(record: AttendanceRecord): Observable<any> {
-    // Determine the API status code based on string
-    let dbStatus = 1; // Present
-    let dbRemarks = record.remarks || '';
+  constructor(private http: HttpClient, private appConfig: AppConfigService) { }
 
-    if (record.status === 'ABSENT') {
-      dbStatus = 2; // Absent
-    } else if (record.status === 'HALF DAY') {
-      dbStatus = 1; // Present
-      dbRemarks = 'Half Day';
+  /**
+   * Helper method to ensure dates are correctly formatted to YYYY-MM-DD
+   * to avoid timezone issues when sending calendar dates to the API.
+   */
+  private formatDate(date: Date | string): string {
+    if (typeof date === 'string') {
+      // If it's already a string, assume it's correctly formatted or try to parse it
+      const d = new Date(date);
+      if (!isNaN(d.getTime())) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      return date;
+    }
+    // If it's a Date object
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * 1. GET /api/Attendance
+   * Fetch attendance records based on optional filters.
+   */
+  getAttendance(
+    attendanceDate?: string | Date,
+    shift?: string,
+    employeeId?: number
+  ): Observable<AttendanceListResponse> {
+    let params = new HttpParams();
+
+    if (attendanceDate) {
+      params = params.set('attendanceDate', this.formatDate(attendanceDate));
     }
 
-    const payload = {
-      date: record.attendanceDate,
-      records: [{
-        employeeId: record.employeeId,
-        status: dbStatus,
-        remarks: dbRemarks
-      }]
-    };
+    if (shift) {
+      params = params.set('shift', shift);
+    }
 
-    return this.apiService.markBulkAttendance(payload);
+    if (employeeId !== undefined && employeeId !== null) {
+      params = params.set('employeeId', employeeId.toString());
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/Attendance`, { params })
+      .pipe(
+        map(res => {
+          const payload = res.data || res;
+          return {
+            attendanceDate: payload.attendanceDate || this.formatDate(attendanceDate || new Date()),
+            shift: payload.shift || shift,
+            totalEmployees: payload.totalEmployees || 0,
+            presentCount: payload.presentCount || 0,
+            leaveCount: payload.leaveCount || 0,
+            halfDayCount: payload.halfDayCount || 0,
+            employees: payload.data || payload.employees || []
+          } as AttendanceListResponse;
+        }),
+        catchError(error => {
+          console.error('Failed to load attendance', error);
+          return throwError(() => error);
+        })
+      );
   }
 
-  // Bulk update attendance records
-  bulkUpdateAttendance(records: AttendanceRecord[], date: string): Observable<any> {
-    const apiRecords = records.map(record => {
-      let dbStatus = 1; // Present
-      let dbRemarks = record.remarks || '';
 
-      if (record.status === 'ABSENT') {
-        dbStatus = 2; // Absent
-      } else if (record.status === 'HALF DAY') {
-        dbStatus = 1; // Present
-        dbRemarks = 'Half Day';
-      }
+  /**
+   * 2. POST /api/Attendance
+   * Bulk insert or update attendance records for a specific date and shift.
+   */
+  saveAttendance(request: BulkAttendanceRequest): Observable<AttendanceListResponse> {
+    // Ensure the date is formatted correctly for calendar-day operation
+    request.attendanceDate = this.formatDate(request.attendanceDate);
+    if (request.attendance && request.attendance.length > 0) {
+      request.attendance.forEach(att => {
+        att.attendanceDate = this.formatDate(att.attendanceDate);
+      });
+    }
 
-      return {
-        employeeId: record.employeeId,
-        status: dbStatus,
-        remarks: dbRemarks
-      };
-    });
+    return this.http.post<any>(`${this.apiUrl}/Attendance`, request)
+      .pipe(
+        map(res => {
+          const payload = res.data || res;
+          return {
+            attendanceDate: payload.attendanceDate || request.attendanceDate,
+            shift: payload.shift || request.shift,
+            totalEmployees: payload.totalEmployees || 0,
+            presentCount: payload.presentCount || 0,
+            leaveCount: payload.leaveCount || 0,
+            halfDayCount: payload.halfDayCount || 0,
+            employees: payload.data || payload.employees || []
+          } as AttendanceListResponse;
+        }),
+        catchError(error => {
+          console.error('Failed to save bulk attendance', error);
+          return throwError(() => error);
+        })
+      );
+  }
 
+  /**
+   * 3. PUT /api/Attendance/{employeeId}
+   * Update attendance for a single employee.
+   */
+  updateAttendance(employeeId: number, request: AttendanceRequest): Observable<AttendanceResponse> {
+    // Ensure calendar-day format
+    request.attendanceDate = this.formatDate(request.attendanceDate);
+
+    return this.http.put<AttendanceResponse>(`${this.apiUrl}/Attendance/${employeeId}`, request)
+      .pipe(
+        catchError(error => {
+          console.error(`Failed to update attendance for employee ${employeeId}`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Optional: Single employee save/upsert
+   * Prefer using the POST bulk endpoint for the main screen, but this is available if needed.
+   * It routes to PUT since it's a single update, assuming record already exists, or POST if needed.
+   * Based on requirements, backend handles upsert, but we map to PUT here for single updates.
+   */
+  upsertAttendance(request: AttendanceRequest): Observable<AttendanceResponse> {
+    // Calling the single employee update API
+    return this.updateAttendance(request.employeeId, request);
+  }
+
+  getAttendanceSummary(fromDate: string | Date, toDate: string | Date, shift: string): Observable<AttendancePeriodSummary[]> {
+    const params = new HttpParams()
+      .set('fromDate', this.formatDate(fromDate))
+      .set('toDate', this.formatDate(toDate))
+      .set('shift', shift);
+
+    return this.http.get<any>(`${this.getAttendanceBaseUrl()}/summary`, { params }).pipe(
+      map(res => res.data || []),
+      catchError(error => {
+        console.error('Failed to load attendance summary', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  getEmployeeAttendanceDetails(employeeId: number, fromDate: string | Date, toDate: string | Date): Observable<AttendanceEmployeeDetail> {
+    const params = new HttpParams()
+      .set('fromDate', this.formatDate(fromDate))
+      .set('toDate', this.formatDate(toDate));
+
+    return this.http.get<any>(`${this.getAttendanceBaseUrl()}/employee/${employeeId}/details`, { params }).pipe(
+      map(res => res.data),
+      catchError(error => {
+        console.error(`Failed to load attendance details for employee ${employeeId}`, error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  saveEmployeeAttendance(request: SaveEmployeeAttendanceRequest): Observable<AttendanceResponse> {
     const payload = {
-      date: date,
-      records: apiRecords
+      ...request,
+      attendanceDate: this.formatDate(request.attendanceDate)
     };
 
-    return this.apiService.markBulkAttendance(payload);
+    return this.http.post<any>(`${this.getAttendanceBaseUrl()}/save`, payload).pipe(
+      map(res => res.data),
+      catchError(error => {
+        console.error('Failed to save employee attendance', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  private getAttendanceBaseUrl(): string {
+    return `${this.appConfig.getApiBaseUrl()}/api/Attendance`;
   }
 }
