@@ -14,7 +14,7 @@ export class AppConfigService {
     Attendance: [],
     Machines: []
   };
-  private apiBaseUrl: string = 'http://200.141.4.172:6000';
+  private apiBaseUrl: string = 'http://200.141.4.172:6001';
 
   // Centralized static config as fallback/default
   private defaultConfig: HrmsConfig = {
@@ -40,7 +40,7 @@ export class AppConfigService {
     ]
   };
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   loadConfig(): Observable<any> {
     return this.http.get('/assets/appsettings.json').pipe(
@@ -92,7 +92,7 @@ export class AppConfigService {
   getAttendanceStatuses(): AttendanceStatus[] {
     return this.defaultConfig.attendanceStatuses;
   }
-  
+
   getDepartments(): Department[] {
     return this.defaultConfig.departments;
   }
