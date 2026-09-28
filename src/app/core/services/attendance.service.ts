@@ -95,7 +95,9 @@ export interface AttendanceEmployeeDetail {
 })
 export class AttendanceService {
   // Matches the convention used in employee.service.ts
-  private apiUrl = 'http://localhost:6002/api';
+  get apiUrl(): string {
+    return `${this.configService.getApiBaseUrl()}/api`;
+  }
 
   constructor(private http: HttpClient, private configService: AppConfigService) { }
 

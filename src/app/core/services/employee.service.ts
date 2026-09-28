@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AppConfigService } from './app-config.service';
 import {
   Employee,
   EmployeeCreateRequest,
@@ -17,9 +18,11 @@ import {
 })
 export class EmployeeService {
   // Replace this with your actual environment variable base URL later
-  private apiUrl = 'http://localhost:6002/api/Employee';
+  get apiUrl(): string {
+    return `${this.configService.getApiBaseUrl()}/api/Employee`;
+  }
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private configService: AppConfigService) { }
 
   /**
    * 1. GET /api/Employee
