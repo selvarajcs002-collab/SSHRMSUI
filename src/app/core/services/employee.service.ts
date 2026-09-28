@@ -17,9 +17,11 @@ import {
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = 'http://200.141.4.172:6000/api/Employee';
+  private get apiUrl(): string {
+    return `${this.appConfig.getApiBaseUrl()}/api/Employee`;
+  }
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private appConfig: AppConfigService) { }
 
   /**
    * 1. GET /api/Employee

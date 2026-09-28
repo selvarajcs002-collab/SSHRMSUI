@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { AppConfigService } from './app-config.service';
 
 
 export interface AttendanceRequest {
@@ -94,10 +95,11 @@ export interface AttendanceEmployeeDetail {
   providedIn: 'root'
 })
 export class AttendanceService {
-  // Matches the convention used in employee.service.ts
-  private apiUrl = 'http://200.141.4.172:6003/api';
+  private get apiUrl(): string {
+    return `${this.appConfig.getApiBaseUrl()}/api`;
+  }
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private appConfig: AppConfigService) { }
 
   /**
    * Helper method to ensure dates are correctly formatted to YYYY-MM-DD
@@ -271,6 +273,6 @@ export class AttendanceService {
   }
 
   private getAttendanceBaseUrl(): string {
-    return `http://200.141.4.172:6003/api/Attendance`;
+    return `${this.appConfig.getApiBaseUrl()}/api/Attendance`;
   }
 }
