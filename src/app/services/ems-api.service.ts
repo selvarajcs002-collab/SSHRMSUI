@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { AppConfigService } from '../core/services/app-config.service';
+
 import { MarkSalaryPaidRequest, SalaryDetails, SalarySummary, SaveSalaryDetailsRequest } from '../models/salary-details.model';
 
 @Injectable({
@@ -12,8 +12,8 @@ import { MarkSalaryPaidRequest, SalaryDetails, SalarySummary, SaveSalaryDetailsR
 export class EmsApiService {
   baseUrl = '';
 
-  constructor(private http: HttpClient, private configService: AppConfigService) { 
-    this.baseUrl = `${this.configService.getApiBaseUrl()}/api/ems`;
+  constructor(private http: HttpClient) {
+    this.baseUrl = `http://200.141.4.172:6001/api/ems`;
   }
 
   private getHeaders(): HttpHeaders {
@@ -88,7 +88,7 @@ export class EmsApiService {
     if (search) {
       params = params.set('search', search);
     }
-    return this.http.get(`${this.configService.getApiBaseUrl()}/api/Employee`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`http://200.141.4.172:6001/api/Employee`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => ({
         items: res.items || res.Items || [],
         totalCount: res.totalRecords || res.TotalRecords || 0
@@ -338,7 +338,7 @@ export class EmsApiService {
   }
   // --- SALARY DETAILS ---
   createSalaryDetails(dto: SaveSalaryDetailsRequest): Observable<SalaryDetails> {
-    return this.http.post(`${this.configService.getApiBaseUrl()}/api/salary-details`, dto, { headers: this.getHeaders() }).pipe(
+    return this.http.post(`http://200.141.4.172:6001/api/salary-details`, dto, { headers: this.getHeaders() }).pipe(
       map((res: any) => res.data)
     );
   }
@@ -348,14 +348,14 @@ export class EmsApiService {
     if (employeeId) params = params.set('employeeId', employeeId.toString());
     if (fromDate) params = params.set('fromDate', fromDate);
     if (toDate) params = params.set('toDate', toDate);
-    
-    return this.http.get(`${this.configService.getApiBaseUrl()}/api/salary-details`, { headers: this.getHeaders(), params }).pipe(
+
+    return this.http.get(`http://200.141.4.172:6001/api/salary-details`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => res.data || [])
     );
   }
 
   updateSalaryDetails(employeeId: number, dto: SaveSalaryDetailsRequest): Observable<SalaryDetails> {
-    return this.http.put(`${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}`, dto, { headers: this.getHeaders() }).pipe(
+    return this.http.put(`http://200.141.4.172:6001/api/salary-details/${employeeId}`, dto, { headers: this.getHeaders() }).pipe(
       map((res: any) => res.data)
     );
   }
@@ -364,8 +364,8 @@ export class EmsApiService {
     let params = new HttpParams();
     if (fromDate) params = params.set('fromDate', fromDate);
     if (toDate) params = params.set('toDate', toDate);
-    
-    return this.http.get(`${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}`, { headers: this.getHeaders(), params }).pipe(
+
+    return this.http.get(`http://200.141.4.172:6001/api/salary-details/${employeeId}`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => res.data || [])
     );
   }
@@ -375,14 +375,14 @@ export class EmsApiService {
       .set('fromDate', fromDate)
       .set('toDate', toDate);
 
-    return this.http.get(`${this.configService.getApiBaseUrl()}/api/salary-details/summary`, { headers: this.getHeaders(), params }).pipe(
+    return this.http.get(`http://200.141.4.172:6001/api/salary-details/summary`, { headers: this.getHeaders(), params }).pipe(
       map((res: any) => res.data)
     );
   }
 
   markSalaryAsPaid(employeeId: number, request: MarkSalaryPaidRequest): Observable<SalaryDetails> {
     return this.http.post(
-      `${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}/mark-paid`,
+      `http://200.141.4.172:6001/api/salary-details/${employeeId}/mark-paid`,
       request,
       { headers: this.getHeaders() }
     ).pipe(
@@ -392,7 +392,7 @@ export class EmsApiService {
 
   generatePayslip(employeeId: number, request: PayslipRequest): Observable<Blob> {
     return this.http.post(
-      `${this.configService.getApiBaseUrl()}/api/salary-details/${employeeId}/payslip`,
+      `http://200.141.4.172:6001/api/salary-details/${employeeId}/payslip`,
       request,
       {
         headers: this.getHeaders(),

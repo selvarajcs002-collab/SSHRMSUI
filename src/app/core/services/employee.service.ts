@@ -17,12 +17,9 @@ import {
   providedIn: 'root'
 })
 export class EmployeeService {
-  // Replace this with your actual environment variable base URL later
-  get apiUrl(): string {
-    return `${this.configService.getApiBaseUrl()}/api/Employee`;
-  }
+  private apiUrl = 'http://200.141.4.172:6001/api/Employee';
 
-  constructor(private http: HttpClient, private configService: AppConfigService) { }
+  constructor(private http: HttpClient) { }
 
   /**
    * 1. GET /api/Employee
