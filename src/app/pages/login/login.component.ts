@@ -17,7 +17,7 @@ export class LoginComponent implements OnInit {
   submitted = false;
   errorMessage = '';
   showPassword = false;
-  returnUrl = '/dashboard';
+  returnUrl = '/employee-registration';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -25,9 +25,9 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private authService: AuthService
   ) {
-    // Redirect to dashboard if already logged in
+    // Redirect to employee registration if already logged in
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/employee-registration']);
     }
   }
 
@@ -38,8 +38,8 @@ export class LoginComponent implements OnInit {
       rememberMe: [false]
     });
 
-    // Get return url from route parameters or default to '/dashboard'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    // Get return url from route parameters or default to '/employee-registration'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/employee-registration';
   }
 
   // Convenience getter for easy access to form fields
@@ -76,6 +76,7 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(credentials).subscribe({
       next: () => {
+        this.isLoading = false;
         this.router.navigate([this.returnUrl]);
       },
       error: (error) => {

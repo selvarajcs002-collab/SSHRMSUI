@@ -1,0 +1,173 @@
+<div class="shift-container modern-ui animate-fade-in">
+  
+  <!-- Modern Header -->
+  <div class="dashboard-header mb-4">
+    <div class="header-titles">
+      <h2>Shift Management</h2>
+      <p class="text-secondary">Organize employee shifts and allocate workstations</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-glow-primary" (click)="toggleAddMachineForm()">
+        <i class="fa-solid fa-screwdriver-wrench"></i> Manage Workstations
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Widgets -->
+  <div class="stats-row mb-4">
+    <div class="stat-card clean-card">
+      <div class="stat-icon text-orange"><i class="fa-solid fa-sun"></i></div>
+      <div class="stat-data">
+        <span class="value">{{ getDayShiftCount() }}</span>
+        <span class="label">Day Shift</span>
+      </div>
+    </div>
+    
+    <div class="stat-card clean-card">
+      <div class="stat-icon text-purple"><i class="fa-solid fa-moon"></i></div>
+      <div class="stat-data">
+        <span class="value">{{ getNightShiftCount() }}</span>
+        <span class="label">Night Shift</span>
+      </div>
+    </div>
+
+    <div class="stat-card clean-card">
+      <div class="stat-icon text-green"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div class="stat-data">
+        <span class="value">{{ getAssignedCount() }}</span>
+        <span class="label">Total Assigned</span>
+      </div>
+    </div>
+
+    <div class="stat-card clean-card">
+      <div class="stat-icon text-red"><i class="fa-solid fa-user-clock"></i></div>
+      <div class="stat-data">
+        <span class="value">{{ getUnassignedCount() }}</span>
+        <span class="label">Awaiting Assignment</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar clean-card mb-4">
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name or code..." class="search-input" />
+    </div>
+  </div>
+
+  <!-- Table Section -->
+  <div class="table-container clean-card">
+    <table class="modern-table">
+      <thead>
+        <tr>
+          <th width="5%"><input type="checkbox" class="modern-checkbox" /></th>
+          <th width="25%">EMPLOYEE</th>
+          <th width="25%">MACHINE / WORKSTATION</th>
+          <th width="25%">SHIFT</th>
+          <th width="20%">STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of getFilteredEmployees(); let i = index">
+          <td><input type="checkbox" class="modern-checkbox" /></td>
+          <td>
+            <div class="user-profile">
+              <div class="avatar">
+                <img *ngIf="emp.profilePicture && emp.profilePicture !== 'undefined' && emp.profilePicture !== 'null'" [src]="emp.profilePicture" alt="Profile" />
+                <span *ngIf="!emp.profilePicture || emp.profilePicture === 'undefined' || emp.profilePicture === 'null'">{{ getInitials(emp.fullName) }}</span>
+              </div>
+              <div class="user-info">
+                <span class="name">{{ emp.fullName }}</span>
+                <span class="code">{{ emp.employeeCode }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="machine-select-group" style="width: 250px; min-width: 200px;">
+              <ng-select
+                [items]="machines"
+                bindLabel="name"
+                bindValue="name"
+                placeholder="Select Workstation"
+                [ngModel]="getEmpMachineName(emp.id)"
+                (ngModelChange)="onGridMachineChange(emp, $event || '')"
+                [clearable]="true"
+                appendTo="body"
+                class="modern-ng-select">
+              </ng-select>
+            </div>
+          </td>
+          <td>
+            <div class="shift-toggles" *ngIf="getEmpAssignment(emp.id) as asg">
+              <button class="toggle-btn day-btn" [class.active]="asg.shiftType === 'Morning' || asg.shiftType == 1" (click)="toggleShift(emp.id, 1, asg.machineName)">
+                <i class="fa-solid fa-sun"></i> Day
+              </button>
+              <button class="toggle-btn night-btn" [class.active]="asg.shiftType === 'Night' || asg.shiftType == 2" (click)="toggleShift(emp.id, 2, asg.machineName)">
+                <i class="fa-solid fa-moon"></i> Night
+              </button>
+            </div>
+            <div class="shift-toggles" *ngIf="!getEmpAssignment(emp.id)">
+              <button class="toggle-btn disabled" disabled><i class="fa-solid fa-sun"></i> Day</button>
+              <button class="toggle-btn disabled" disabled><i class="fa-solid fa-moon"></i> Night</button>
+            </div>
+          </td>
+          <td>
+            <span class="status-badge" [class.assigned]="getEmpAssignment(emp.id)" [class.unassigned]="!getEmpAssignment(emp.id)">
+              {{ getEmpAssignment(emp.id) ? 'Assigned' : 'Unassigned' }}
+            </span>
+          </td>
+        </tr>
+        <tr *ngIf="getFilteredEmployees().length === 0">
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="fa-solid fa-users-slash empty-icon"></i>
+              <p>No active employees found.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="table-footer">
+      <span class="footer-text">Showing {{ getFilteredEmployees().length > 0 ? 1 : 0 }}–{{ getFilteredEmployees().length }} of {{ getFilteredEmployees().length }} employees</span>
+    </div>
+  </div>
+
+  <!-- Modal Dialog for Workstations -->
+  <div *ngIf="showAddForm" class="modal-overlay">
+    <div class="modal-card clean-card animate-fade-in">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-screwdriver-wrench"></i> Manage Workstations</h3>
+        <button class="btn-close" (click)="toggleAddMachineForm()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="add-machine-form">
+          <div class="control-item">
+            <label>Workstation Name</label>
+            <input type="text" [(ngModel)]="newMachineName" placeholder="e.g. CNC Machine - 03" class="input-full" />
+          </div>
+          <div class="control-item">
+            <label>Floor / Area Unit</label>
+            <input type="text" [(ngModel)]="newMachineFloor" placeholder="e.g. Floor Unit A" class="input-full" />
+          </div>
+          <button (click)="addMachine()" class="btn-glow-primary w-full mt-3" [disabled]="!newMachineName.trim()">
+            <i class="fa-solid fa-plus"></i> Add Workstation
+          </button>
+        </div>
+        
+        <div class="machine-list mt-4">
+          <div *ngFor="let mach of machines" class="machine-list-item">
+            <div class="machine-info">
+              <strong>{{ mach.name }}</strong>
+              <span class="text-secondary text-sm">{{ mach.floor }}</span>
+            </div>
+            <button (click)="deleteMachine(mach.name)" class="btn-icon-danger">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
