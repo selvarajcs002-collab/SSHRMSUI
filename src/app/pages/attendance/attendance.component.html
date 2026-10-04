@@ -280,7 +280,7 @@
             <td class="col-status">
               <div class="status-radio-group-container">
                 <label class="custom-status-radio" *ngFor="let s of attendanceStatuses" [ngClass]="[s.color, record.status === s.name || record.status === s.id ? 'is-active' : '']">
-                  <input type="radio" [name]="'status-' + record.employeeId" [value]="s.name" [(ngModel)]="record.status" (ngModelChange)="updateInlineStatus(record, $event)" />
+                  <input type="radio" [name]="'status-' + record.employeeId" [value]="s.name" [ngModel]="record.status" (ngModelChange)="updateInlineStatus(record, $event)" />
                   <span class="radio-mark"></span>
                   <span class="label-text">{{ s.name }}</span>
                 </label>

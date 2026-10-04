@@ -46,54 +46,55 @@ export class AuthService {
           'Content-Type': 'application/json-patch+json'
         });
 
-        return this.http.post<any>(url, credentials, { headers });
-      }),
-      map(response => {
-        // If the API returns a 200 OK but indicates failure in the body
-        if (response && response.status === false) {
-          throw new Error(response.message || 'Login failed.');
-        }
-
-        // If the API indicates success via an id > 0
-        if (response && response.id > 0) {
-          const authResult: AuthResponse = {
-            success: true,
-            // Fallback to a valid token string so AuthGuard works, if real token isn't provided
-            token: response.token || response.accessToken || `session-active-${response.id}`,
-            user: {
-              id: response.id.toString(),
-              username: credentials.email.split('@')[0],
-              email: credentials.email,
-              firstName: 'Admin',
-              lastName: 'User'
+        return this.http.post<any>(url, credentials, { headers }).pipe(
+          map(response => {
+            // If the API returns a 200 OK but indicates failure in the body
+            if (response && response.status === false) {
+              throw new Error(response.message || 'Login failed.');
             }
-          };
 
-          this.setSession(authResult);
-          return authResult;
-        }
+            // If the API indicates success via an id > 0
+            if (response && response.id > 0) {
+              const authResult: AuthResponse = {
+                success: true,
+                // Fallback to a valid token string so AuthGuard works, if real token isn't provided
+                token: response.token || response.accessToken || config?.ApiSettings?.MockJwtToken || `session-active-${response.id}`,
+                user: {
+                  id: response.id.toString(),
+                  username: credentials.email.split('@')[0],
+                  email: credentials.email,
+                  firstName: 'Admin',
+                  lastName: 'User'
+                }
+              };
 
-        // Fallback to strict token-based check
-        const token = typeof response === 'string' ? response : (response?.token || response?.accessToken);
+              this.setSession(authResult);
+              return authResult;
+            }
 
-        if (!token) {
-          throw new Error(response?.message || 'Invalid response from server.');
-        }
+            // Fallback to strict token-based check
+            const token = typeof response === 'string' ? response : (response?.token || response?.accessToken || config?.ApiSettings?.MockJwtToken);
 
-        const authResult: AuthResponse = {
-          success: true,
-          token: token,
-          user: {
-            id: '1', // Mock user details since API might just return a token
-            username: credentials.email.split('@')[0],
-            email: credentials.email,
-            firstName: 'Admin',
-            lastName: 'User'
-          }
-        };
+            if (!token) {
+              throw new Error(response?.message || 'Invalid response from server.');
+            }
 
-        this.setSession(authResult);
-        return authResult;
+            const authResult: AuthResponse = {
+              success: true,
+              token: token,
+              user: {
+                id: '1', // Mock user details since API might just return a token
+                username: credentials.email.split('@')[0],
+                email: credentials.email,
+                firstName: 'Admin',
+                lastName: 'User'
+              }
+            };
+
+            this.setSession(authResult);
+            return authResult;
+          })
+        );
       }),
       catchError((error: any) => {
         // If the error was thrown manually from the map operator
@@ -102,7 +103,7 @@ export class AuthService {
         }
 
         let errorMsg = 'Unable to connect to the login server. Please try again.';
-        
+
         if (error.error?.message) {
           errorMsg = error.error.message;
         } else if (error.error && typeof error.error === 'string') {
@@ -110,7 +111,7 @@ export class AuthService {
         } else if (error.status === 401 || error.status === 400) {
           errorMsg = 'Invalid email or password.';
         }
-        
+
         return throwError(() => new Error(errorMsg));
       })
     );

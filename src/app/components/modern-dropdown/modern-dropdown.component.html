@@ -1,0 +1,20 @@
+<div class="dropdown-wrapper">
+  <div class="dropdown-display" (click)="toggleDropdown()" [class.active]="isOpen">
+    <span class="value" *ngIf="value">{{ value }}</span>
+    <span class="placeholder" *ngIf="!value">{{ placeholder }}</span>
+    <i class="fa-solid fa-chevron-down toggle-icon"></i>
+  </div>
+
+  <div class="dropdown-popup animate-fade-in" *ngIf="isOpen" (click)="$event.stopPropagation()">
+    <div class="dropdown-list">
+      <div class="dropdown-item" *ngFor="let option of options" 
+           [class.selected]="option === value"
+           (click)="selectOption(option, $event)">
+        {{ option }}
+      </div>
+      <div class="dropdown-empty" *ngIf="options.length === 0">
+        No options available
+      </div>
+    </div>
+  </div>
+</div>

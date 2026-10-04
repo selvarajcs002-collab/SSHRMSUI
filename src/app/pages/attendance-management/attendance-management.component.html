@@ -1,0 +1,421 @@
+<div class="page-header">
+  <div class="header-title">
+    <div class="icon-box">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+    </div>
+    <div>
+      <h2>Attendance Management</h2>
+      <p>Track and manage daily attendance of your employees</p>
+    </div>
+  </div>
+  <div class="header-right-action">
+    <app-modern-calendar [selectedDate]="currentDate" (dateChange)="onDateSelected($event)"></app-modern-calendar>
+  </div>
+</div>
+
+<div class="top-controls">
+  <div class="shift-tabs">
+    <span class="tab-label">Shift View</span>
+    <button class="shift-tab" [class.active]="activeShift === 'Morning'" (click)="setShift('Morning')">
+      <i class="fa-regular fa-sun"></i> Day Shift
+    </button>
+    <button class="shift-tab" [class.active]="activeShift === 'Night'" (click)="setShift('Night')">
+      <i class="fa-solid fa-moon"></i> Night Shift
+    </button>
+  </div>
+
+  <div class="range-filters">
+    <div class="filter-group">
+      <label>From Date</label>
+      <app-modern-calendar [selectedDate]="fromDate" (dateChange)="onFromDateSelected($event)"></app-modern-calendar>
+    </div>
+    <div class="filter-group">
+      <label>To Date</label>
+      <app-modern-calendar [selectedDate]="toDate" (dateChange)="onToDateSelected($event)"></app-modern-calendar>
+    </div>
+    <button class="btn btn-primary apply-btn" (click)="applyDateRange()" [disabled]="isSummaryLoading">
+      <i class="fa-solid fa-magnifying-glass"></i> {{ isSummaryLoading ? 'Loading...' : 'Apply' }}
+    </button>
+  </div>
+</div>
+
+<div class="dashboard-stats-grid mb-6 mt-4">
+  <div class="stat-widget-card stat-present">
+    <div class="stat-icon-wrapper text-success bg-success-glow">
+      <i class="fa-solid fa-users"></i>
+    </div>
+    <div class="stat-info">
+      <h3>{{ periodPresentCount }}</h3>
+      <span>Present</span>
+      <div class="stat-trend">Selected period</div>
+    </div>
+  </div>
+
+  <div class="stat-widget-card stat-leave">
+    <div class="stat-icon-wrapper text-error bg-error-glow">
+      <i class="fa-solid fa-umbrella-beach"></i>
+    </div>
+    <div class="stat-info">
+      <h3>{{ periodAbsentCount }}</h3>
+      <span>Absent</span>
+      <div class="stat-trend">Leave days in period</div>
+    </div>
+  </div>
+
+  <div class="stat-widget-card stat-halfday">
+    <div class="stat-icon-wrapper text-purple bg-purple-glow">
+      <i class="fa-solid fa-circle-half-stroke"></i>
+    </div>
+    <div class="stat-info">
+      <h3>{{ periodHalfDayCount }}</h3>
+      <span>Half Day</span>
+      <div class="stat-trend">Half-day records</div>
+    </div>
+  </div>
+
+  <div class="stat-widget-card stat-notmarked">
+    <div class="stat-icon-wrapper text-warning bg-warning-glow">
+      <i class="fa-regular fa-circle-question"></i>
+    </div>
+    <div class="stat-info">
+      <h3>{{ periodNotMarkedCount }}</h3>
+      <span>Not Marked</span>
+      <div class="stat-trend">Attendance not yet taken</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="glass-card table-wrapper">
+  <div class="section-title">
+    <div>
+      <h3>Mark Attendance</h3>
+      <p>Daily entry for {{ formatDisplayDate(currentDate) }}</p>
+    </div>
+  </div>
+  <div class="table-controls">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search by name..." (input)="onSearch($event)">
+    </div>
+    <button class="btn btn-outline-success" (click)="openExportModal()">
+      <i class="fa-regular fa-file-excel"></i> Export Excel
+    </button>
+  </div>
+
+  <div class="ems-table-container mt-4">
+    <table class="ems-table">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Name</th>
+          <th>Shift</th>
+          <th>Status</th>
+          <th>Remarks</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let record of displayedRecords; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>
+            <div class="avatar-cell">
+              <div class="avatar-circle">{{ (record.name || 'U').charAt(0) }}</div>
+              <span class="font-semibold">{{ record.name || 'Unknown' }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="shift-badge" [ngClass]="{'day': record.shift === 'Morning', 'night': record.shift === 'Night'}">
+              <i class="fa-regular fa-sun" *ngIf="record.shift === 'Morning'"></i>
+              <i class="fa-solid fa-moon" *ngIf="record.shift === 'Night'"></i>
+              {{ record.shift === 'Morning' ? 'Day' : 'Night' }}
+            </div>
+          </td>
+          <td>
+            <div class="status-select-wrapper" [ngClass]="(record.status || 'Present').toLowerCase()">
+              <div class="status-dot"></div>
+              <ng-select 
+                [items]="statusOptions" 
+                [ngModel]="record.status || 'Present'" 
+                (ngModelChange)="updateStatus(record, $event)"
+                [clearable]="false"
+                [searchable]="false"
+                appendTo="body"
+                class="custom-table-select">
+              </ng-select>
+            </div>
+          </td>
+          <td>{{ record.remarks }}</td>
+          <td class="text-center flex justify-center gap-2">
+            <button class="icon-btn edit-btn text-blue-600" title="Mark Attendance" (click)="openMarkModal(record)">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button class="icon-btn view-btn text-primary" title="View attendance details" (click)="openDetails(record)">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="displayedRecords.length === 0">
+          <td colspan="6" class="text-center py-4">No employees found for this shift.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="flex justify-end mt-4 pt-4 border-t border-color">
+    <button class="btn btn-primary px-6 py-3" (click)="saveAttendance()">
+      <i class="fa-regular fa-floppy-disk"></i> Save Attendance
+    </button>
+  </div>
+</div>
+
+<!-- Mark Attendance Modal -->
+<div class="modal-overlay" *ngIf="showMarkModal">
+  <div class="modal-card small-modal">
+    <div class="modal-header border-b border-gray-100">
+      <h3 class="font-bold text-lg m-0">{{ getModalDate() }}</h3>
+      <button class="close-btn" (click)="closeMarkModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body p-5">
+      <div class="form-group mb-5">
+        <label class="text-xs font-bold text-gray-500 tracking-wider mb-2 block uppercase">Mark Attendance</label>
+        
+        <div class="radio-option-card" [class.selected]="tempStatus === 'Present'" (click)="tempStatus = 'Present'">
+          <input type="radio" name="attendanceStatus" value="Present" [(ngModel)]="tempStatus" class="mr-3 custom-radio">
+          <span class="status-badge present"><span class="dot"></span> PRESENT</span>
+        </div>
+
+        <div class="radio-option-card" [class.selected]="tempStatus === 'Leave'" (click)="tempStatus = 'Leave'">
+          <input type="radio" name="attendanceStatus" value="Leave" [(ngModel)]="tempStatus" class="mr-3 custom-radio">
+          <span class="status-badge absent"><span class="dot"></span> LEAVE (ABSENT)</span>
+        </div>
+
+        <div class="radio-option-card" [class.selected]="tempStatus === 'Half-Day'" (click)="tempStatus = 'Half-Day'">
+          <input type="radio" name="attendanceStatus" value="Half-Day" [(ngModel)]="tempStatus" class="mr-3 custom-radio">
+          <span class="status-badge half-day"><span class="dot"></span> HALF DAY</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="text-xs font-bold text-gray-500 tracking-wider mb-2 block uppercase">Remarks (Optional)</label>
+        <textarea [(ngModel)]="tempRemarks" rows="3" class="form-control resize-none w-full" placeholder="Enter remarks..."></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer justify-between px-5 py-4 bg-gray-50 border-t border-gray-100">
+      <button class="btn btn-secondary bg-white border border-gray-200 text-gray-700" (click)="closeMarkModal()">Cancel</button>
+      <button class="btn btn-primary px-6" (click)="saveMarkModal()">
+        <i class="fa-regular fa-floppy-disk mr-2"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Excel Modal -->
+<div class="modal-overlay" *ngIf="showExportModal">
+  <div class="modal-card small-modal">
+    <div class="modal-header">
+      <div class="flex items-center gap-2">
+        <i class="fa-regular fa-file-excel text-success"></i>
+        <h3>Export Attendance to Excel</h3>
+      </div>
+      <button class="close-btn" (click)="closeExportModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group mb-4">
+        <label>From Date *</label>
+        <div class="date-input-wrapper">
+          <app-modern-calendar [selectedDate]="exportFromDate" (dateChange)="onExportFromDateSelected($event)"></app-modern-calendar>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>To Date *</label>
+        <div class="date-input-wrapper">
+          <app-modern-calendar [selectedDate]="exportToDate" (dateChange)="onExportToDateSelected($event)"></app-modern-calendar>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeExportModal()">Cancel</button>
+      <button class="btn btn-success" (click)="generateExcel()">
+        <i class="fa-regular fa-file-excel mr-2"></i> Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Success Toast -->
+<div class="toast-container" *ngIf="showSuccessToast">
+  <div class="toast success-toast animate-fade-in">
+    <i class="fa-solid fa-check-circle"></i>
+    <div>
+      <div class="toast-title">{{ successToastMessage }}</div>
+      <div class="toast-desc">Attendance has been updated.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" *ngIf="showErrorToast">
+  <div class="toast error-toast animate-fade-in">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <div>
+      <div class="toast-title">Something went wrong</div>
+      <div class="toast-desc">{{ errorToastMessage }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance Details Drawer -->
+<div class="drawer-overlay" *ngIf="showDetailsDrawer" (click)="closeDetails()"></div>
+<aside class="details-drawer" *ngIf="showDetailsDrawer">
+  <div class="drawer-header">
+    <div>
+      <h3>Attendance Details</h3>
+      <p>{{ formatDisplayDate(fromDate) }} - {{ formatDisplayDate(toDate) }}</p>
+    </div>
+    <button class="close-btn" (click)="closeDetails()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="drawer-body" *ngIf="isDetailsLoading">
+    <p class="text-center py-4">Loading attendance details...</p>
+  </div>
+
+  <div class="drawer-body" *ngIf="!isDetailsLoading && detailsError">
+    <p class="text-center py-4">{{ detailsError }}</p>
+  </div>
+
+  <div class="drawer-body" *ngIf="!isDetailsLoading && attendanceDetails">
+    <div class="drawer-user-info mb-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="drawer-avatar">{{ (attendanceDetails.employeeName || 'U').charAt(0) }}</div>
+        <div class="drawer-user-details">
+          <h4 class="m-0 text-lg font-bold">{{ attendanceDetails.employeeName }}</h4>
+          <p class="m-0 text-sm text-gray-500">Employee ID: {{ attendanceDetails.employeeCode || attendanceDetails.employeeId }} | Designation: {{ attendanceDetails.designation || 'Admin' }}</p>
+        </div>
+      </div>
+      <div class="drawer-shift-badge" [ngClass]="{'day': attendanceDetails.shift !== 'Night', 'night': attendanceDetails.shift === 'Night'}">
+        <i class="fa-regular fa-sun" *ngIf="attendanceDetails.shift !== 'Night'"></i>
+        <i class="fa-solid fa-moon" *ngIf="attendanceDetails.shift === 'Night'"></i>
+        {{ shiftLabel(attendanceDetails.shift) }} Shift
+      </div>
+    </div>
+
+    <div class="drawer-calendar-box glass-card mb-4 p-4">
+      <div class="calendar-header flex justify-between items-center mb-4 px-2">
+        <button class="icon-btn" (click)="drawerPrevMonth()"><i class="fa-solid fa-chevron-left"></i></button>
+        <h4 class="font-bold text-md m-0">{{ drawerMonthLabel }}</h4>
+        <button class="icon-btn" (click)="drawerNextMonth()"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+      
+      <div class="calendar-grid">
+        <div class="calendar-day-header" *ngFor="let d of drawerWeekDays">{{ d }}</div>
+        
+        <div class="calendar-cell" *ngFor="let cell of drawerCalendarGrid" 
+             [ngClass]="{'not-in-month': !cell.inMonth, 'clickable': cell.inMonth, 'present': cell.status === 'Present', 'absent': cell.status === 'Absent' || cell.status === 'Leave', 'half-day': cell.status === 'Half-Day', 'not-marked': cell.status === 'Not Marked' && cell.inMonth}"
+             (click)="onAttendanceDateClick(cell.date, cell.inMonth)">
+          {{ cell.date.getDate() }}
+        </div>
+      </div>
+      
+      <div class="calendar-legend mt-5">
+        <span class="legend-item"><span class="legend-dot present"></span> Present</span>
+        <span class="legend-item"><span class="legend-dot absent"></span> Absent</span>
+        <span class="legend-item"><span class="legend-dot not-marked"></span> Not Marked</span>
+      </div>
+    </div>
+
+    <div class="drawer-lists flex gap-4">
+      <div class="date-list-box flex-1">
+        <div class="list-header error-header">
+          <i class="fa-regular fa-calendar-xmark"></i> Absent Dates ({{ attendanceDetails.absentDates.length || 0 }})
+        </div>
+        <div class="date-list">
+          <p *ngIf="!attendanceDetails.absentDates.length" class="empty-list">None</p>
+          <div class="date-list-item error-item clickable" *ngFor="let date of attendanceDetails.absentDates" (click)="onAttendanceDateClick(date)">
+            {{ formatDisplayDate(date) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="date-list-box flex-1">
+        <div class="list-header warning-header">
+          <i class="fa-regular fa-calendar-minus"></i> Not Marked Dates ({{ attendanceDetails.notMarkedDates.length || 0 }})
+        </div>
+        <div class="date-list">
+          <p *ngIf="!attendanceDetails.notMarkedDates.length" class="empty-list">None</p>
+          <div class="date-list-item warning-item clickable" *ngFor="let date of attendanceDetails.notMarkedDates" (click)="onAttendanceDateClick(date)">
+            {{ formatDisplayDate(date) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-footer">
+    <button class="btn btn-secondary" (click)="closeDetails()">Close</button>
+  </div>
+</aside>
+
+<div class="mark-dialog-overlay" *ngIf="isAttendanceDialogOpen" (click)="closeAttendanceDialog()">
+  <div class="mark-dialog" (click)="$event.stopPropagation()">
+    <div class="mark-dialog-header">
+      <h3>{{ formatDialogTitle(selectedAttendanceDate) }}</h3>
+      <button class="close-btn" type="button" (click)="closeAttendanceDialog()" [disabled]="isSavingAttendance">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="mark-dialog-body">
+      <label class="mark-section-label">Mark Attendance</label>
+
+      <label class="status-option present" [class.selected]="selectedAttendanceStatus === 'Present'">
+        <input type="radio" name="dialogAttendanceStatus" value="Present" [(ngModel)]="selectedAttendanceStatus">
+        <div class="status-badge">
+          <span class="dot"></span>
+          <span>Present</span>
+        </div>
+      </label>
+
+      <label class="status-option leave" [class.selected]="selectedAttendanceStatus === 'Leave'">
+        <input type="radio" name="dialogAttendanceStatus" value="Leave" [(ngModel)]="selectedAttendanceStatus">
+        <div class="status-badge">
+          <span class="dot"></span>
+          <span>Leave (Absent)</span>
+        </div>
+      </label>
+
+      <label class="status-option half-day" [class.selected]="selectedAttendanceStatus === 'Half-Day'">
+        <input type="radio" name="dialogAttendanceStatus" value="Half-Day" [(ngModel)]="selectedAttendanceStatus">
+        <div class="status-badge">
+          <span class="dot"></span>
+          <span>Half Day</span>
+        </div>
+      </label>
+
+      <label class="mark-section-label remarks-label">Remarks (Optional)</label>
+      <textarea
+        [(ngModel)]="selectedAttendanceRemarks"
+        rows="3"
+        placeholder="Enter remarks..."
+        [disabled]="isSavingAttendance"></textarea>
+
+      <p class="dialog-error" *ngIf="attendanceDialogError">{{ attendanceDialogError }}</p>
+    </div>
+
+    <div class="mark-dialog-footer">
+      <button class="btn-cancel" type="button" (click)="closeAttendanceDialog()" [disabled]="isSavingAttendance">Cancel</button>
+      <button class="btn-save" [class.loading]="isSavingAttendance" type="button" (click)="saveDialogAttendance()" [disabled]="isSavingAttendance">
+        <i class="fa-regular fa-floppy-disk"></i> {{ isSavingAttendance ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+  </div>
+</div>
