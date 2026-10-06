@@ -38,7 +38,7 @@ export class AssignShiftComponent implements OnInit {
             employeeShiftId: emp.employeeShiftId,
             employeeId: emp.employeeId,
             name: emp.employeeName || 'Unknown',
-            designation: 'N/A',
+            designation: emp.designation || 'N/A',
             shift: emp.shift || 'Morning'
           }));
           
